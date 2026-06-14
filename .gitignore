@@ -1,0 +1,21 @@
+# Logi i pliki tymczasowe
+LOGS/
+*.log
+files_list.txt
+merge_list.txt
+
+# Wyniki (filmy)
+VIDEO/
+
+# Dane wejściowe (zdjęcia)
+# Ignorujemy pliki jpg, ale zachowujemy strukturę folderów kamer
+JPEG/**/*.jpg
+JPEG/**/*.txt
+
+# Pliki konfiguracyjne z wrażliwymi danymi
+Blue Iris.reg
+
+# Systemowe
+Thumbs.db
+ehthumbs.db
+Desktop.ini

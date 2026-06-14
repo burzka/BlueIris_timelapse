@@ -1,0 +1,5 @@
+# Ustawienie domyślnego traktowania końców linii
+* text=auto
+
+# Skrypty PowerShell zawsze z CRLF (standard Windows)
+*.ps1 text eol=crlf

@@ -1,48 +1,46 @@
 # --- KONFIGURACJA ---
-$SourcePath  = "C:\BlueIris_timelapse\JPEG"   # 📥 Źródło zdjęć
-$StoragePath = "C:\BlueIris_timelapse\VIDEO"  # 📤 Tu tworzymy filmy (Lokalnie)
-$LogPath     = "C:\BlueIris_timelapse\LOGS"   # 📝 Logi
-$Quality     = 19                             # Jakość
-$FPS         = 30                             # Prędkość
+$SourcePath  = "C:\BlueIris_timelapse\JPEG"   # Zrodlo zdjec
+$StoragePath = "C:\BlueIris_timelapse\VIDEO"  # Tu tworzymy filmy (Lokalnie)
+$LogPath     = "C:\BlueIris_timelapse\LOGS"   # Logi
+$Quality     = 19                             # Jakosc
+$FPS         = 30                             # Predkosc
 
 # KONFIGURACJA RCLONE
 $RcloneExe    = "C:\Tools\rclone\rclone.exe"   
 $RcloneRemote = "drive_timelapse:/"            
 $RemoteFolder = "VIDEO"                        
 
-# --- WAŻNE: Wklej tu ścieżkę z komendy 'rclone config file' ---
+# WAŻNE: Wklej tu sciezke z komendy 'rclone config file'
 $RcloneConfig = "C:\Users\michal\AppData\Roaming\rclone\rclone.conf" 
 
 # Szukanie FFmpeg
 $ffmpegPath = "C:\Tools\ffmpeg\bin\ffmpeg.exe"
 if (-not (Test-Path $ffmpegPath)) { $ffmpegPath = "C:\Tools\ffmpeg\ffmpeg.exe" }
 if (-not (Test-Path $ffmpegPath)) { $ffmpegPath = "$PSScriptRoot\ffmpeg.exe" }
-if (-not (Test-Path $ffmpegPath)) { Write-Error "❌ BŁĄD: Brak FFmpeg!"; exit }
+if (-not (Test-Path $ffmpegPath)) { Write-Error "BLAD: Brak FFmpeg!"; exit }
 
 # Data i czas
 $CurrentDate = Get-Date -Format "yyyy-MM-dd"
 $CurrentYear = Get-Date -Format "yyyy"
 $TimeStamp   = Get-Date -Format "HH-mm-ss"
 
-# Wyliczanie poniedziałku bieżącego tygodnia (zapobiega nadpisywaniu plików tygodniowych w ciągu tygodnia)
+# Wyliczanie poniedzialku biezacego tygodnia (zapobiega nadpisywaniu plikow tygodniowych w ciagu tygodnia)
 $dt = Get-Date
 $dayOfWeek = [int]$dt.DayOfWeek
 $daysToSubtract = if ($dayOfWeek -eq 0) { 6 } else { $dayOfWeek - 1 }
 $MondayDate = $dt.AddDays(-$daysToSubtract).ToString("yyyy-MM-dd")
 
-# Weryfikacja ścieżek
-if (-not (Test-Path $SourcePath)) { Write-Error "❌ BŁĄD: Brak folderu źródłowego $SourcePath"; exit }
+# Weryfikacja sciezek
+if (-not (Test-Path $SourcePath)) { Write-Error "BLAD: Brak folderu zrodlowego $SourcePath"; exit }
 if (-not (Test-Path $LogPath))    { New-Item -ItemType Directory -Path $LogPath -Force | Out-Null }
-if (-not (Test-Path $RcloneExe))  { Write-Error "❌ BŁĄD: Brak pliku rclone.exe"; exit }
-if (-not (Test-Path $RcloneConfig)){ Write-Error "❌ BŁĄD: Brak pliku konfiguracyjnego rclone.conf w: $RcloneConfig"; exit }
+if (-not (Test-Path $RcloneExe))  { Write-Error "BLAD: Brak pliku rclone.exe"; exit }
+if (-not (Test-Path $RcloneConfig)){ Write-Error "BLAD: Brak pliku konfiguracyjnego rclone.conf w: $RcloneConfig"; exit }
 
-# Funkcja obliczająca wschód/zachód słońca dla Polski (szerokość ok. 52°N)
+# Funkcja obliczajaca wschod/zachod slonca dla Polski (szerokosc ok. 52 deg N)
 function Get-SunriseSunset {
     param([datetime]$Date)
     $day = $Date.DayOfYear
-    # Wschód słońca: Średnia 6:00, waha się od 4:15 do 7:45
     $sunriseHour = 6.0 + 1.75 * [Math]::Cos(2 * [Math]::PI * ($day - 355) / 365)
-    # Zachód słońca: Średnia 18:15, waha się od 15:30 do 21:00
     $sunsetHour = 18.25 - 2.75 * [Math]::Cos(2 * [Math]::PI * ($day - 355) / 365)
     
     return [PSCustomObject]@{
@@ -51,23 +49,24 @@ function Get-SunriseSunset {
     }
 }
 
-# --- GŁÓWNA PĘTLA ---
+# --- GLOWNA PETLA ---
 $folders = Get-ChildItem -Path $SourcePath -Directory
 
 foreach ($folder in $folders) {
     $CameraName = $folder.Name
-    Write-Host "`n🎥 Przetwarzam kamere: $CameraName" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "[KAMERA] Przetwarzam kamere: $CameraName" -ForegroundColor Cyan
 
-    # --- 1. ŚCIEŻKI LOKALNE ---
+    # --- 1. SCIEZKI LOKALNE ---
     $ArchiveDir = "$StoragePath\$CameraName\$CurrentYear"
     if (-not (Test-Path $ArchiveDir)) { New-Item -ItemType Directory -Path $ArchiveDir -Force | Out-Null }
     
-    # Pliki list plików dla FFmpeg
+    # Pliki list plikow dla FFmpeg
     $ListFileFull  = "$($folder.FullName)\files_list_full.txt"
     $ListFileDay   = "$($folder.FullName)\files_list_day.txt"
     $ListFileNight = "$($folder.FullName)\files_list_night.txt"
     
-    # Definicja typów timelapsów (pliki tygodniowe oparte o poniedziałek)
+    # Definicja typow timelapsow (pliki tygodniowe oparte o poniedzialek)
     $timelapseTypes = @(
         @{
             Name       = "FULL"
@@ -105,16 +104,16 @@ foreach ($folder in $folders) {
     $LogOut     = "$LogPath\$($CurrentDate)_$($TimeStamp)_$($CameraName)_OUT.log"
     $LogErr     = "$LogPath\$($CurrentDate)_$($TimeStamp)_$($CameraName)_ERR.log"
 
-    # --- KROK 1: SEGREGACJA ZDJĘĆ I GENEROWANIE TYGODNIÓWEK ---
+    # --- KROK 1: SEGREGACJA ZDJEC I GENEROWANIE TYGODNIOWEK ---
     $files = Get-ChildItem -Path $folder.FullName -Filter "*.jpg" | Sort-Object Name
     
     if ($files.Count -eq 0) {
-        Write-Host "   ⚠️ Brak nowych zdjec. Pomijam." -ForegroundColor DarkGray
+        Write-Host "   [INFO] Brak nowych zdjec. Pomijam." -ForegroundColor DarkGray
         Add-Content -Path $LogOut -Value "Brak nowych zdjec dla kamery $CameraName"
         continue
     }
 
-    # Wczytujemy istniejące metadane, aby zapobiec duplikatom klatek po awarii
+    # Wczytujemy istniejace metadane, aby zapobiec duplikatom klatek po awarii
     $metadataPath = "$StoragePath\$CameraName\$($CameraName)_FULL_metadata.json"
     $existingTimestamps = @{}
     if (Test-Path $metadataPath) {
@@ -143,8 +142,7 @@ foreach ($folder in $folders) {
         $tsStr = $fileTime.ToString("yyyy-MM-dd HH:mm")
         
         if ($existingTimestamps.ContainsKey($tsStr)) {
-            # Klatka o tym czasie została już wcześniej włączona do wideo i bazy JSON!
-            # Usuwamy plik źródłowy, ponieważ nie jest nam już potrzebny
+            # Klatka o tym czasie zostala juz wczesniej wlaczona
             try { Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue; $duplicateDeleted++ } catch {}
             continue
         }
@@ -153,19 +151,19 @@ foreach ($folder in $folders) {
     }
 
     if ($duplicateDeleted -gt 0) {
-        Write-Host "   🧹 Wykryto i usunięto $duplicateDeleted wczesniej przetworzonych klatek." -ForegroundColor Yellow
+        Write-Host "   [CZYSZCZENIE] Wykryto i usunieto $duplicateDeleted wczesniej przetworzonych klatek." -ForegroundColor Yellow
     }
 
-    # Obsługa przypadku braku nowych klatek (wszystkie były duplikatami)
+    # Obsluga przypadku braku nowych klatek (wszystkie byly duplikatami)
     if ($validFiles.Count -eq 0) {
-        Write-Host "   ⚠️ Brak nowych klatek do doklejenia. Przechodze do ponownego uploadu Rclone." -ForegroundColor Yellow
+        Write-Host "   [INFO] Brak nowych klatek do doklejenia. Przechodze do ponownego uploadu Rclone." -ForegroundColor Yellow
         
-        # Inicjalizacja pustych list plików tylko po to, by FFmpeg nie krzyczał (lub sprzątanie)
+        # Inicjalizacja pustych list plikow
         $swFull  = [System.IO.StreamWriter]::new($ListFileFull); $swFull.Close()
         $swDay   = [System.IO.StreamWriter]::new($ListFileDay); $swDay.Close()
         $swNight = [System.IO.StreamWriter]::new($ListFileNight); $swNight.Close()
 
-        # Oznaczamy sukces, aby Rclone podjął próbę wysłania plików zbiorczych na Drive
+        # Oznaczamy sukces, aby Rclone podjal probe wyslania plikow zbiorczych na Drive
         foreach ($type in $timelapseTypes) {
             $type.Success = $true
         }
@@ -178,7 +176,6 @@ foreach ($folder in $folders) {
             $CloudPathYear = "$RcloneRemote$RemoteFolder/$CameraName/$CurrentYear"
             $CloudPathRoot = "$RcloneRemote$RemoteFolder/$CameraName"
             
-            # Weryfikujemy upload pliku FULL i WEEKLY
             if (Test-Path $fullPath) {
                 $arg2 = "copyto `"$fullPath`" `"$CloudPathRoot/$($type.CloudName)`" --config `"$RcloneConfig`""
                 $p2 = Start-Process -FilePath $RcloneExe -ArgumentList $arg2 -NoNewWindow -Wait -PassThru
@@ -190,14 +187,14 @@ foreach ($folder in $folders) {
             }
         }
         
-        # Sprzątanie list plików
+        # Sprzatanie list plikow
         if (Test-Path $ListFileFull) { Remove-Item $ListFileFull }
         if (Test-Path $ListFileDay) { Remove-Item $ListFileDay }
         if (Test-Path $ListFileNight) { Remove-Item $ListFileNight }
         continue
     }
 
-    Write-Host "   1️⃣ Segregacja zdjec ($($validFiles.Count) sztuk)..." -NoNewline
+    Write-Host "   [1/4] Segregacja zdjec ($($validFiles.Count) sztuk)..." -NoNewline
     
     $swFull  = [System.IO.StreamWriter]::new($ListFileFull)
     $swDay   = [System.IO.StreamWriter]::new($ListFileDay)
@@ -229,7 +226,7 @@ foreach ($folder in $folders) {
     
     Write-Host " OK! (Dzien: $dayCount, Noc: $nightCount)" -ForegroundColor Green
 
-    # Generowanie wideo dla każdego typu (o ile ma zdjęcia)
+    # Generowanie wideo dla kazdego typu (o ile ma zdjecia)
     foreach ($type in $timelapseTypes) {
         $imgCount = 0
         if ($type.Name -eq "FULL") {
@@ -241,7 +238,7 @@ foreach ($folder in $folders) {
         }
         
         if ($imgCount -eq 0) {
-            Write-Host "   ⚠️ Typ $($type.Name): Brak zdjec w tym okresie. Pomijam." -ForegroundColor Yellow
+            Write-Host "   [INFO] Typ $($type.Name): Brak zdjec w tym okresie. Pomijam." -ForegroundColor Yellow
             continue
         }
 
@@ -249,8 +246,8 @@ foreach ($folder in $folders) {
         $weeklyPath = $type.Weekly
         
         if (Test-Path $weeklyPath) {
-            # Plik tygodniowy już istnieje - doklejamy nowe klatki!
-            Write-Host "   🎥 Doklejanie do wideo tygodniowego $($type.Name)..." -NoNewline
+            # Plik tygodniowy juz istnieje - doklejamy nowe klatki!
+            Write-Host "   [WIDEO] Doklejanie do wideo tygodniowego $($type.Name)..." -NoNewline
             $tempNewPath = "$StoragePath\$CameraName\Temp_New_Week_$($type.Name).mp4"
             $tempMergePath = "$StoragePath\$CameraName\Temp_Merge_Week_$($type.Name).mp4"
             
@@ -272,18 +269,18 @@ foreach ($folder in $folders) {
                     Write-Host " OK! (Doklejono)" -ForegroundColor Green
                     $type.Success = $true
                 } else {
-                    Write-Host " BŁÄ„D ŁÄ„CZENIA TYGODNIÃ“WKI!" -ForegroundColor Red
+                    Write-Host " BLAD LACZENIA TYGODNIOWKI!" -ForegroundColor Red
                     $type.Success = $false
                 }
                 if (Test-Path $tempNewPath) { Remove-Item $tempNewPath -Force }
                 if (Test-Path $tempMergePath) { Remove-Item $tempMergePath -Force }
             } else {
-                Write-Host " BŁÄ„D NOWYCH KLATEK!" -ForegroundColor Red
+                Write-Host " BLAD NOWYCH KLATEK!" -ForegroundColor Red
                 $type.Success = $false
             }
         } else {
             # Plik tygodniowy nie istnieje - tworzymy nowy
-            Write-Host "   🎥 Generowanie nowego wideo tygodniowego $($type.Name)..." -NoNewline
+            Write-Host "   [WIDEO] Generowanie nowego wideo tygodniowego $($type.Name)..." -NoNewline
             $argsGen = "-y -r $FPS -f concat -safe 0 -i `"$listPath`" -c:v h264_nvenc -preset p6 -rc:v vbr_hq -cq:v $Quality -b:v 0 -pix_fmt yuv420p `"$weeklyPath`""
             $procGen = Start-Process -FilePath $ffmpegPath -ArgumentList $argsGen -WorkingDirectory $folder.FullName -NoNewWindow -Wait -PassThru -RedirectStandardOutput $LogOut -RedirectStandardError $LogErr
             
@@ -291,20 +288,20 @@ foreach ($folder in $folders) {
                 Write-Host " OK!" -ForegroundColor Green
                 $type.Success = $true
             } else {
-                Write-Host " BŁÄ„D!" -ForegroundColor Red
+                Write-Host " BLAD!" -ForegroundColor Red
                 $type.Success = $false
             }
         }
     }
 
-    # --- KROK 2: AKTUALIZACJA PLIKÓW zbiorczych (FULL, DAY, NIGHT) ---
+    # --- KROK 2: AKTUALIZACJA PLIKOW ZBIORCZYCH ---
     $AllMergeSuccess = $true
 
     foreach ($type in $timelapseTypes) {
         if (-not $type.Success) { continue }
         
-        Write-Host "   🔄 Aktualizacja pliku $($type.Name)..." -NoNewline
-        Add-Content -Path $LogOut -Value "`n--- ŁÄ„CZENIE (MERGE) dla $($type.Name) ---"
+        Write-Host "   [WIDEO] Aktualizacja pliku zbiorczego $($type.Name)..." -NoNewline
+        Add-Content -Path $LogOut -Value "`n--- LACZENIE (MERGE) dla $($type.Name) ---"
         
         $weeklyPath = $type.Weekly
         $fullPath = $type.Full
@@ -328,7 +325,7 @@ foreach ($folder in $folders) {
                 Add-Content -Path $LogOut -Value "Sukces laczenia $($type.Name)."
             } else {
                 Write-Host " Blad laczenia!" -ForegroundColor Red
-                Add-Content -Path $LogOut -Value "BŁÄ„D laczenia $($type.Name)! Zobacz: $LogMergeErr"
+                Add-Content -Path $LogOut -Value "BLAD laczenia $($type.Name)! Zobacz: $LogMergeErr"
                 if (Test-Path $tempPath) { Remove-Item $tempPath }
                 $AllMergeSuccess = $false
             }
@@ -349,7 +346,7 @@ foreach ($folder in $folders) {
             try {
                 $metadataList = Get-Content $metadataPath -Raw | ConvertFrom-Json
             } catch {
-                Write-Host "   ⚠️ Nie udalo sie wczytac pliku metadanych. Tworze nowy." -ForegroundColor Yellow
+                Write-Host "   [INFO] Nie udalo sie wczytac pliku metadanych. Tworze nowy." -ForegroundColor Yellow
             }
         }
         
@@ -379,7 +376,7 @@ foreach ($folder in $folders) {
         
         $metadataJson = ConvertTo-Json -InputObject $metadataList -Compress -Depth 5
         $metadataJson | Out-File -FilePath $metadataPath -Encoding utf8
-        Write-Host "   📝 Zaktualizowano metadane klatek w: $metadataPath" -ForegroundColor Green
+        Write-Host "   [JSON] Zaktualizowano metadane klatek w: $metadataPath" -ForegroundColor Green
     }
 
     # --- KROK 3: BACKUP PRZEZ RCLONE ---
@@ -388,7 +385,7 @@ foreach ($folder in $folders) {
     foreach ($type in $timelapseTypes) {
         if (-not $type.Success) { continue }
         
-        Write-Host "   ☁️ Rclone Upload dla $($type.Name)..." -NoNewline
+        Write-Host "   [CHMURA] Rclone Upload dla $($type.Name)..." -NoNewline
         Add-Content -Path $LogOut -Value "Rozpoczynam upload Rclone dla $($type.Name)..."
         
         $weeklyPath = $type.Weekly
@@ -415,19 +412,19 @@ foreach ($folder in $folders) {
              Write-Host " OK!" -ForegroundColor Green
              Add-Content -Path $LogOut -Value "Rclone Upload $($type.Name): SUKCES"
         } else {
-             Write-Host " BŁÄ„D UPLOADU!" -ForegroundColor Red
-             Add-Content -Path $LogOut -Value "Rclone Upload $($type.Name): BŁÄ„D (Kod $($p1.ExitCode) / $($p2.ExitCode))"
+             Write-Host " BLAD UPLOADU!" -ForegroundColor Red
+             Add-Content -Path $LogOut -Value "Rclone Upload $($type.Name): BLAD (Kod $($p1.ExitCode) / $($p2.ExitCode))"
              $AllBackupSuccess = $false
         }
     }
 
-    # --- KROK 4: CZYSZCZENIE ZDJĘĆ ---
+    # --- KROK 4: CZYSZCZENIE ZDJEC ---
     $ActiveTypes = $timelapseTypes | Where-Object { $_.Success -eq $true }
     $ExpectedSuccessCount = $ActiveTypes.Count
     
     if ($ExpectedSuccessCount -gt 0 -and $AllMergeSuccess -and $AllBackupSuccess) {
-        Write-Host "   🧹 Usuwanie starych zdjec..." -NoNewline
-        Add-Content -Path $LogOut -Value "`n--- USUWANIE ZDJĘĆ ---"
+        Write-Host "   [CZYSZCZENIE] Usuwanie starych zdjec..." -NoNewline
+        Add-Content -Path $LogOut -Value "`n--- USUWANIE ZDJEC ---"
         $deletedCount = 0
         foreach ($item in $validFiles) { 
             $file = $item.File
@@ -436,16 +433,17 @@ foreach ($folder in $folders) {
         Add-Content -Path $LogOut -Value "Usunieto plikow: $deletedCount"
         Write-Host " Wyczyszczono ($deletedCount)." -ForegroundColor Yellow
     } else {
-        Write-Host "   ⚠️ POMINIĘTO USUWANIE! (Problem z merge/backupem)" -ForegroundColor Magenta
-        Add-Content -Path $LogOut -Value "NIE USUNIĘTO ZDJĘĆ. MergeSuccess=$AllMergeSuccess, BackupSuccess=$AllBackupSuccess"
+        Write-Host "   [OSTRZEZENIE] POMINIETO USUWANIE! (Problem z merge/backupem)" -ForegroundColor Magenta
+        Add-Content -Path $LogOut -Value "NIE USUNIETO ZDJEC. MergeSuccess=$AllMergeSuccess, BackupSuccess=$AllBackupSuccess"
     }
 
-    # Sprzątanie list plików
+    # Sprzatanie list plikow
     foreach ($type in $timelapseTypes) {
         if (Test-Path $type.ListFile) { Remove-Item $type.ListFile }
     }
     if (Test-Path $MergeList) { Remove-Item $MergeList }
 }
 
-Write-Host "`n✅ ZADANIE ZAKOŃCZONE." -ForegroundColor Magenta
+Write-Host ""
+Write-Host "[OK] ZADANIE ZAKONCZONE." -ForegroundColor Magenta
 Start-Sleep -Seconds 5

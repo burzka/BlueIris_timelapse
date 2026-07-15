@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podręcznik Użytkownika - BlueIris Timelapse Automation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131a2c;
+            --bg-tertiary: #1b253f;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.25);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --code-bg: #1e293b;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #111827 0%, #030712 100%);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - Menu */
+        .sidebar {
+            width: 300px;
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border);
+            padding: 40px 24px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--accent);
+            padding-left: 18px;
+        }
+
+        /* Główny kontener */
+        .main-content {
+            margin-left: 300px;
+            padding: 50px 80px;
+            max-width: 1100px;
+            width: calc(100% - 300px);
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .lead-text {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        section {
+            margin-bottom: 60px;
+            scroll-margin-top: 50px;
+        }
+
+        h2.section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+            color: #ffffff;
+        }
+
+        p {
+            line-height: 1.6;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Karty */
+        .card {
+            background: rgba(17, 24, 39, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .badge-dev { background: rgba(59, 130, 246, 0.15); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-prod { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Kod i bloki komend */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #f43f5e;
+        }
+
+        .code-block-wrapper {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--code-bg);
+            padding: 18px 24px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        /* Architektura / Tabele */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .info-table th, .info-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-table th {
+            color: #ffffff;
+            font-weight: 600;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .info-table td {
+            color: var(--text-secondary);
+        }
+
+        .info-table tr:hover td {
+            color: #ffffff;
+            background: rgba(255,255,255,0.01);
+        }
+
+        /* Alerty */
+        .alert {
+            border-left: 4px solid var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+            padding: 16px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .alert-warning {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .alert p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>BlueIris Automation</h2>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="#architektura" class="nav-link active">1. Architektura i pliki</a></li>
+            <li class="nav-item"><a href="#wymagania" class="nav-link">2. Wymagania systemowe</a></li>
+            <li class="nav-item"><a href="#skrypt-podzialu" class="nav-link">3. Podział archiwów (Dev)</a></li>
+            <li class="nav-item"><a href="#skrypt-produkcyjny" class="nav-link">4. Pętla tygodniowa (Prod)</a></li>
+            <li class="nav-item"><a href="#wizualizator" class="nav-link">5. Wizualizator HTML</a></li>
+            <li class="nav-item"><a href="#faq" class="nav-link">6. Rozwiązywanie problemów</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1>Dokumentacja & Instrukcja Obsługi</h1>
+            <p class="lead-text">Zautomatyzowany system generowania, podziału na dzień/noc i weryfikacji kompletności timelapsów z 5 kamer systemu BlueIris przy użyciu FFmpeg i lokalnej sztucznej inteligencji Ollama (model VLM GLM-OCR).</p>
+        </header>
+
+        <!-- Sekcja 1 -->
+        <section id="architektura">
+            <h2 class="section-title">1. Architektura systemu i struktura plików</h2>
+            <p>System operuje na dwóch powiązanych strukturach katalogów: folderze deweloperskim (workspace) służącym do analizy historycznej i skryptów testowych oraz folderze produkcyjnym (BlueIris), gdzie automatycznie gromadzone są zdjęcia i generowane wynikowe timelapsy.</p>
+            
+            <div class="card">
+                <div class="card-title">Struktura Katalogów w Środowisku</div>
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Ścieżka</th>
+                            <th>Typ</th>
+                            <th>Opis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>C:\BlueIris_timelapse\JPEG\[Kamera]\</code></td>
+                            <td>Folder wejściowy</td>
+                            <td>Miejsce zapisu zdjęć przez BlueIris (np. <code>Domofon.20260715_130000.jpg</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><code>C:\BlueIris_timelapse\VIDEO\[Kamera]\</code></td>
+                            <td>Folder wynikowy</td>
+                            <td>Główna baza filmów zbiorczych, tygodniówek oraz plików metadanych JSON.</td>
+                        </tr>
+                        <tr>
+                            <td><code>Auto_Timelapse.ps1</code></td>
+                            <td>Skrypt produkcyjny</td>
+                            <td>Główny skrypt pętli tygodniowej uruchamiany przez Harmonogram Zadań.</td>
+                        </tr>
+                        <tr>
+                            <td><code>completeness_visualizer.html</code></td>
+                            <td>Narzędzie webowe</td>
+                            <td>Strona HTML do interaktywnej wizualizacji kompletności klatek.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sekcja 2 -->
+        <section id="wymagania">
+            <h2 class="section-title">2. Wymagania systemowe</h2>
+            <p>Aby system działał z pełną wydajnością i stabilnością, na komputerze muszą być skonfigurowane następujące komponenty:</p>
+            
+            <div class="card">
+                <div class="card-title">Wymagane Środowisko i Wycena Wydajności</div>
+                <ul>
+                    <li><strong>NVIDIA GPU (GeForce RTX 5070 Ti 16GB):</strong> Służy do akceleracji obliczeń sieci neuronowej Ollama oraz kodowania wideo FFmpeg NVENC (sprzętowy kodek <code>h264_nvenc</code>).</li>
+                    <li><strong>Ollama i model glm-ocr:</strong> Serwis Ollama musi działać w tle. Model <code>glm-ocr</code> musi być pobrany komendą:
+                        <div class="code-block-wrapper">
+                            <pre>ollama pull glm-ocr</pre>
+                        </div>
+                    </li>
+                    <li><strong>FFmpeg:</strong> Zainstalowany w ścieżce systemowej lub w <code>C:\Tools\ffmpeg\bin\ffmpeg.exe</code>.</li>
+                    <li><strong>Python 3 + Pillow (PIL):</strong> Wymagany do uruchomienia skryptu OCR.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Sekcja 3 -->
+        <section id="skrypt-podzialu">
+            <h2 class="section-title">3. Podział historycznych archiwów (Dev)</h2>
+            <p>Służy do jednorazowego, niezwykle precyzyjnego podzielenia dotychczasowych, wielkich plików wideo (np. <code>Domofon_FULL.mp4</code>) na dzień/noc i utworzenia plików bazowych JSON.</p>
+            
+            <div class="card">
+                <div class="card-title">
+                    split_all_cameras_optimized.ps1
+                    <span class="badge badge-dev">Developer Tool</span>
+                </div>
+                <p>Ten skrypt przetwarza wszystkie pliki wideo w Twoim katalogu roboczym. Dla każdej kamery:</p>
+                <ol>
+                    <li>Weryfikuje rozdzielczość pliku (1080p lub 4K).</li>
+                    <li>Dobiera odpowiedni wycinek daty (dla 1080p: <code>crop=600:100:5:0</code> - zapobiega ucięciu daty z Domofonu).</li>
+                    <li>Wyciąga wycinki klatek i uruchamia <strong>wielowątkowy skrypt OCR (6 równoległych wątków)</strong> komunikujący się z Ollamą przez IPv4 (<code>127.0.0.1</code>).</li>
+                    <li>Interpretuje daty, chroni przed cofaniem czasu, wyznacza granice słońca i za pomocą FFmpeg generuje pliki <code>_DAY.mp4</code> i <code>_NIGHT.mp4</code> oraz plik <code>_metadata.json</code>.</li>
+                    <li>Kopiuje wyniki bezpośrednio do folderów produkcyjnych w <code>C:\BlueIris_timelapse\VIDEO\[Kamera]\</code>.</li>
+                </ol>
+                <div class="code-block-wrapper">
+                    <button class="copy-btn" onclick="copyCode(this)">Kopiuj</button>
+                    <pre>powershell -File "C:\Users\Michal\code\BlueIris_timelapse\scratch\split_all_cameras_optimized.ps1"</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sekcja 4 -->
+        <section id="skrypt-produkcyjny">
+            <h2 class="section-title">4. Produkcyjna pętla tygodniowa</h2>
+            <p>Skrypt <code>Auto_Timelapse.ps1</code> odpowiada za automatyczną pracę w tle. Powinien być uruchamiany np. raz w tygodniu w niedzielę w nocy lub w dowolnym momencie ręcznie.</p>
+            
+            <div class="card">
+                <div class="card-title">
+                    Auto_Timelapse.ps1
+                    <span class="badge badge-prod">Production Core</span>
+                </div>
+                <p><strong>Jak działa skrypt przy każdym uruchomieniu:</strong></p>
+                <ol>
+                    <li>Wyznacza datę poniedziałku bieżącego tygodnia (np. dla uruchomienia w dowolny dzień między 13 a 19 lipca, datą bazową będzie zawsze <code>2026-07-13</code>). Dzięki temu ręczne wywołanie w ciągu tygodnia nie tworzy duplikatów.</li>
+                    <li>Odczytuje datę klatek bezpośrednio z nazw plików JPEG (np. <code>Domofon.20260608_130000.jpg</code>). Trwa to milisekundy i nie obciąża GPU.</li>
+                    <li>Segreguje zdjęcia na dzień i noc według astronomicznego wschodu i zachodu słońca.</li>
+                    <li>Generuje tygodniowe pliki <code>[poniedzialek]_Week.mp4</code>, <code>_Week_Day.mp4</code> oraz <code>_Week_Night.mp4</code>. Jeśli plik tygodniowy z tego tygodnia już istnieje, skrypt <strong>doklei nowe klatki na jego koniec</strong>.</li>
+                    <li>Dokleja te klipy na koniec plików zbiorczych <code>_FULL.mp4</code>, <code>_DAY.mp4</code> oraz <code>_NIGHT.mp4</code>.</li>
+                    <li><strong>Wczytuje dotychczasowy plik JSON</strong> (np. <code>Domofon_FULL_metadata.json</code>), dopisuje nowe klatki z zachowaniem monotoniczności indeksów i zapisuje go z powrotem.</li>
+                    <li>Wysyła zaktualizowane filmy zbiorcze, tygodniówki oraz plik metadanych JSON do chmury Google Drive przez Rclone.</li>
+                    <li>Usuwa przetworzone klatki JPEG z dysku (tylko w przypadku, gdy proces generowania, doklejania i wysyłania Rclone zakończy się pełnym sukcesem!).</li>
+                </ol>
+            </div>
+
+            <div class="alert">
+                <div class="alert-title">Konfiguracja w Harmonogramie Zadań Windows (Task Scheduler)</div>
+                <p>Aby uruchamiać skrypt automatycznie co niedzielę o 23:59:</p>
+                <ol>
+                    <li>Utwórz nowe zadanie podstawowe w Harmonogramie Zadań Windows.</li>
+                    <li>Ustaw wyzwalacz (Trigger) na: <em>Cotygodniowo -> Niedziela, 23:59</em>.</li>
+                    <li>Akcja (Action): <em>Uruchom program</em>.</li>
+                    <li>Program/skrypt: <code>powershell.exe</code>.</li>
+                    <li>Dodaj argumenty: <code>-ExecutionPolicy Bypass -File "C:\Users\Michal\code\BlueIris_timelapse\Auto_Timelapse.ps1"</code>.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Sekcja 5 -->
+        <section id="wizualizator">
+            <h2 class="section-title">5. Wizualizator kompletności klatek HTML</h2>
+            <p>Narzędzie webowe <code>completeness_visualizer.html</code> służy do błyskawicznej analizy spójności nagrań i wykrywania dziur w czasie.</p>
+            
+            <div class="card">
+                <div class="card-title">Jak używać wizualizatora</div>
+                <ol>
+                    <li>Otwórz plik <strong><a href="completeness_visualizer.html" style="color: var(--accent); text-decoration: underline;">completeness_visualizer.html</a></strong> w dowolnej przeglądarce internetowej (Chrome, Edge, Firefox).</li>
+                    <li>Skrypt spróbuje automatycznie załadować lokalny plik <code>Domofon_FULL_metadata.json</code>, jeśli znajduje się w tym samym folderze.</li>
+                    <li>Możesz również **przeciągnąć i upuścić (Drag & Drop)** dowolny plik <code>_metadata.json</code> bezpośrednio na zaznaczony obszar na stronie.</li>
+                    <li>Strona natychmiast wygeneruje siatkę kalendarza (heatmapę) godzina po godzinie oraz listę przerw z wyliczeniem czasu ich trwania.</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Sekcja 6 -->
+        <section id="faq">
+            <h2 class="section-title">6. Rozwiązywanie problemów (FAQ)</h2>
+            
+            <div class="card">
+                <div class="card-title" style="color: var(--warning);">Problem: Bardzo powolne działanie Ollamy (powyżej 15s na klatkę)</div>
+                <p><strong>Przyczyna:</strong> Ollama została załadowana do pamięci RAM procesora (CPU) zamiast pamięci karty graficznej (VRAM). Najczęściej dzieje się tak, gdy inny proces (np. PyTorch/EasyOCR w tle) zablokował pamięć karty przed uruchomieniem Ollamy.</p>
+                <p><strong>Rozwiązanie:</strong> Zamknij wszystkie zbędne skrypty i procesy Pythona, a następnie zrestartuj usługę Ollama w systemie Windows (kliknij prawym przyciskiem myszy na ikonkę Ollamy w zasobniku systemowym i wybierz <em>Quit</em>, po czym uruchom Ollamę ponownie).</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--warning);">Problem: Błąd łączenia wideo (Merge Error)</div>
+                <p><strong>Przyczyna:</strong> FFmpeg napotkał zablokowany plik lub plik wideo zbiorczy jest uszkodzony.</p>
+                <p><strong>Rozwiązanie:</strong> Sprawdź plik logu błędów łączenia w folderze <code>C:\BlueIris_timelapse\LOGS\</code> (pliki o nazwie zakończonej na <code>_MERGE_ERR.log</code>). Znajdziesz tam dokładny kod błędu zwrócony przez FFmpeg.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Funkcja do kopiowania kodu
+        function copyCode(btn) {
+            const pre = btn.nextElementSibling;
+            navigator.clipboard.writeText(pre.innerText).then(() => {
+                btn.innerText = "Skopiowano!";
+                setTimeout(() => btn.innerText = "Kopiuj", 2000);
+            });
+        }
+
+        // Płynne przewijanie menu i active state
+        const links = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section');
+
+        window.addEventListener('scroll', () => {
+            let current = "";
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

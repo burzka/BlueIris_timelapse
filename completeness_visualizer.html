@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wizualizacja Kompletności Klatek - BlueIris Timelapse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131a2c;
+            --bg-tertiary: #1b253f;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.35);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            
+            /* Statusy klatek */
+            --color-day: #10b981;       /* Jasnozielony */
+            --color-night: #6366f1;     /* Fioletowo-niebieski */
+            --color-missing: #ef4444;   /* Intensywny czerwony */
+            --color-empty: #1f2937;     /* Ciemnoszary */
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #111827 0%, #030712 100%);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0;
+        }
+
+        header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        /* Szklane Panele */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            margin-bottom: 24px;
+        }
+
+        /* Dropzone do wczytywania JSON */
+        .dropzone {
+            border: 2px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(59, 130, 246, 0.03);
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        .dropzone:hover {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.08);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .dropzone p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .dropzone span {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Sekcja statystyk */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(31, 41, 55, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        /* Legenda */
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .color-day { background-color: var(--color-day); }
+        .color-night { background-color: var(--color-night); }
+        .color-missing { background-color: var(--color-missing); }
+        .color-empty { background-color: var(--color-empty); }
+
+        /* Tabela Heatmap */
+        .heatmap-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .heatmap-table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 1000px;
+        }
+
+        .heatmap-table th, .heatmap-table td {
+            padding: 6px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .heatmap-table th {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding-bottom: 12px;
+        }
+
+        .row-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: right !important;
+            padding-right: 15px !important;
+            font-weight: 500;
+            width: 120px;
+        }
+
+        /* Komórka godziny */
+        .hour-cell {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .hour-cell:hover {
+            transform: scale(1.18);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .cell-day {
+            background-color: var(--color-day);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell-night {
+            background-color: var(--color-night);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.25);
+        }
+
+        .cell-missing {
+            background-color: var(--color-missing);
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
+            animation: pulse-missing 2s infinite;
+        }
+
+        .cell-empty {
+            background-color: var(--color-empty);
+        }
+
+        @keyframes pulse-missing {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            font-family: 'Outfit', sans-serif;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        /* Dziury w nagraniach - szczegóły */
+        .gaps-container {
+            margin-top: 24px;
+        }
+
+        .gaps-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .gaps-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .gap-item {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .gap-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .gap-duration {
+            font-size: 0.85rem;
+            color: var(--color-missing);
+            font-weight: 500;
+        }
+
+        /* Brak danych info */
+        .no-data-info {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Raport Kompletności Nagrań</h1>
+            <p class="subtitle" id="cameraTitle">Załaduj plik metadanych JSON (np. Domofon_FULL_metadata.json), aby zobaczyć analizę kompletności.</p>
+        </div>
+    </header>
+
+    <!-- Dropzone dla JSON -->
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent); margin-bottom: 10px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p>Przeciągnij i upuść plik <strong>_metadata.json</strong> tutaj lub kliknij, aby wybrać z dysku</p>
+        <span>Obsługuje bezpośrednie pliki wyjściowe z podziału wideo</span>
+        <input type="file" id="fileInput" accept=".json">
+    </div>
+
+    <!-- Panel Statystyk -->
+    <div class="stats-grid" id="statsGrid" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-label">Wszystkie Klatki</div>
+            <div class="stat-value" id="statTotalFrames">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Kompletność</div>
+            <div class="stat-value" id="statCompleteness" style="color: var(--color-day);">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Dni Nagrań</div>
+            <div class="stat-value" id="statTotalDays">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Wykryte Przerwy (Dziury)</div>
+            <div class="stat-value" id="statGaps" style="color: var(--color-missing);">-</div>
+        </div>
+    </div>
+
+    <!-- Panel Heatmap -->
+    <div class="glass-panel" id="heatmapPanel" style="display: none;">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color color-day"></div>
+                Dzień
+            </div>
+            <div class="legend-item">
+                <div class="legend-color color-night"></div>
+                Noc
+            </div>
+            <div class="legend-item">
+                <div class="legend-color color-missing"></div>
+                Brak klatki (Dziura)
+            </div>
+        </div>
+
+        <div class="heatmap-container">
+            <table class="heatmap-table">
+                <thead>
+                    <tr id="tableHeader">
+                        <th>Dzień</th>
+                        <!-- Godziny od 00 do 23 zostaną dodane przez JS -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Wiersze zostaną dodane dynamicznie -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Panel Wykrytych Dziur -->
+    <div class="glass-panel gaps-container" id="gapsPanel" style="display: none;">
+        <div class="gaps-title">Szczegóły Wykrytych Przerw (Dziur w czasie)</div>
+        <div class="gaps-list" id="gapsList">
+            <!-- Dziury zostaną dodane dynamicznie -->
+        </div>
+    </div>
+
+    <div class="no-data-info" id="noDataInfo">
+        Oczekiwanie na plik JSON z metadanymi...
+    </div>
+</div>
+
+<!-- Globalny element tooltipa -->
+<div class="tooltip" id="globalTooltip"></div>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const noDataInfo = document.getElementById('noDataInfo');
+    const statsGrid = document.getElementById('statsGrid');
+    const heatmapPanel = document.getElementById('heatmapPanel');
+    const gapsPanel = document.getElementById('gapsPanel');
+    
+    const cameraTitle = document.getElementById('cameraTitle');
+    const statTotalFrames = document.getElementById('statTotalFrames');
+    const statCompleteness = document.getElementById('statCompleteness');
+    const statTotalDays = document.getElementById('statTotalDays');
+    const statGaps = document.getElementById('statGaps');
+    const tableHeader = document.getElementById('tableHeader');
+    const tableBody = document.getElementById('tableBody');
+    const gapsList = document.getElementById('gapsList');
+    const tooltip = document.getElementById('globalTooltip');
+
+    // Inicjalizacja nagłówków godzin (00 - 23)
+    for (let h = 0; h < 24; h++) {
+        const th = document.createElement('th');
+        th.innerText = String(h).padStart(2, '0');
+        tableHeader.appendChild(th);
+    }
+
+    // Automatyczne wczytanie przy starcie, jeśli plik leży w tym samym folderze
+    window.addEventListener('DOMContentLoaded', () => {
+        // Próbujemy wczytać z tego samego folderu
+        fetch('Domofon_FULL_metadata.json')
+            .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Local file not found');
+            })
+            .then(data => {
+                cameraTitle.innerText = "Automatycznie wczytano: Domofon_FULL_metadata.json";
+                processMetadata(data);
+            })
+            .catch(err => {
+                console.log("Automatyczne wczytanie lokalnego pliku pominięte (brak pliku lub CORS). Oczekiwanie na użytkownika.");
+            });
+    });
+
+    // Obsługa drag & drop
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--accent)';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        if (!file.name.endsWith('.json')) {
+            alert('Wybierz poprawny plik metadanych JSON!');
+            return;
+        }
+        
+        cameraTitle.innerText = `Wczytano plik: ${file.name}`;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                processMetadata(data);
+            } catch (err) {
+                alert('Błąd podczas parsowania pliku JSON: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function processMetadata(data) {
+        if (!Array.isArray(data) || data.length === 0) {
+            alert('Niepoprawny format danych w pliku JSON!');
+            return;
+        }
+
+        // Ukrywamy ekran powitalny
+        noDataInfo.style.display = 'none';
+        statsGrid.style.display = 'grid';
+        heatmapPanel.style.display = 'block';
+        tableBody.innerHTML = '';
+        gapsList.innerHTML = '';
+
+        // Parsowanie dat i budowanie mapy godzin
+        let minDate = null;
+        let maxDate = null;
+        const frameMap = {}; // Klucz: "YYYY-MM-DD HH"
+
+        data.forEach(item => {
+            if (!item.timestamp) return;
+            const parsed = parseDateString(item.timestamp);
+            if (!parsed) return;
+
+            if (!minDate || parsed < minDate) minDate = parsed;
+            if (!maxDate || parsed > maxDate) maxDate = parsed;
+
+            const dateStr = formatDate(parsed);
+            const hourStr = String(parsed.getHours());
+            const key = `${dateStr}_${hourStr}`;
+            
+            frameMap[key] = {
+                frame: item.frame,
+                timestamp: item.timestamp,
+                isDay: item.isDay
+            };
+        });
+
+        if (!minDate || !maxDate) {
+            alert('Nie znaleziono prawidłowych dat w pliku JSON!');
+            return;
+        }
+
+        // Liczymy zakres dni w kalendarzu
+        const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        let presentCount = 0;
+        let expectedCount = 0;
+        let gapsCount = 0;
+        const gapRanges = [];
+        let currentGapStart = null;
+
+        // Generujemy kalendarz i analizujemy dziury
+        const currentDate = new Date(minDate);
+        currentDate.setHours(0, 0, 0, 0);
+        
+        const maxCompareDate = new Date(maxDate);
+        maxCompareDate.setHours(23, 0, 0, 0);
+
+        const rowsData = [];
+
+        while (currentDate <= maxCompareDate) {
+            const dateStr = formatDate(currentDate);
+            const rowHours = [];
+
+            for (let h = 0; h < 24; h++) {
+                const checkTime = new Date(currentDate);
+                checkTime.setHours(h);
+                
+                // Ignorujemy godziny przed pierwszym nagraniem pierwszego dnia
+                // Oraz godziny po ostatnim nagraniu ostatniego dnia
+                if (checkTime < minDate || checkTime > maxDate) {
+                    rowHours.push({ status: 'empty' });
+                    continue;
+                }
+
+                expectedCount++;
+                const key = `${dateStr}_${h}`;
+                const frameInfo = frameMap[key];
+
+                if (frameInfo) {
+                    presentCount++;
+                    rowHours.push({
+                        status: frameInfo.isDay ? 'day' : 'night',
+                        frame: frameInfo.frame,
+                        timestamp: frameInfo.timestamp
+                    });
+
+                    // Jeśli trwała dziura, to ją zamykamy
+                    if (currentGapStart) {
+                        const gapEnd = new Date(checkTime);
+                        gapEnd.setHours(gapEnd.getHours() - 1);
+                        gapRanges.push({ start: currentGapStart, end: gapEnd });
+                        currentGapStart = null;
+                    }
+                } else {
+                    gapsCount++;
+                    rowHours.push({ status: 'missing', timestamp: checkTime.toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' }) });
+
+                    // Jeśli to start nowej dziury, zapisujemy go
+                    if (!currentGapStart) {
+                        currentGapStart = new Date(checkTime);
+                    }
+                }
+            }
+
+            rowsData.push({ date: dateStr, hours: rowHours });
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        // Zamykamy ostatnią dziurę jeśli wciąż trwała
+        if (currentGapStart) {
+            gapRanges.push({ start: currentGapStart, end: new Date(maxDate) });
+        }
+
+        // Wypełniamy statystyki
+        statTotalFrames.innerText = data.length;
+        statTotalDays.innerText = totalDays;
+        
+        const completeness = expectedCount > 0 ? ((presentCount / expectedCount) * 100).toFixed(1) : 0;
+        statCompleteness.innerText = `${completeness}%`;
+        statCompleteness.style.color = completeness > 95 ? 'var(--color-day)' : (completeness > 80 ? '#fbbf24' : 'var(--color-missing)');
+        
+        statGaps.innerText = gapRanges.length;
+
+        // Renderowanie Heatmapy
+        rowsData.forEach(row => {
+            const tr = document.createElement('tr');
+            
+            const tdHeader = document.createElement('td');
+            tdHeader.className = 'row-header';
+            tdHeader.innerText = row.date;
+            tr.appendChild(tdHeader);
+
+            row.hours.forEach((hour, hIdx) => {
+                const td = document.createElement('td');
+                const cell = document.createElement('div');
+                cell.className = `hour-cell cell-${hour.status}`;
+                
+                // Obsługa tooltipa
+                if (hour.status !== 'empty') {
+                    cell.addEventListener('mouseover', (e) => {
+                        let tooltipHtml = '';
+                        if (hour.status === 'day' || hour.status === 'night') {
+                            tooltipHtml = `<strong>Klatka ${hour.frame}</strong><br>Czas: ${hour.timestamp}<br>Status: ${hour.status === 'day' ? 'Dzień' : 'Noc'}`;
+                        } else {
+                            tooltipHtml = `<strong>BRAK KLATKI</strong><br>Oczekiwany czas: ${row.date} ${String(hIdx).padStart(2, '0')}:59`;
+                        }
+                        tooltip.innerHTML = tooltipHtml;
+                        tooltip.style.display = 'block';
+                    });
+
+                    cell.addEventListener('mousemove', (e) => {
+                        tooltip.style.left = (e.pageX + 15) + 'px';
+                        tooltip.style.top = (e.pageY + 15) + 'px';
+                    });
+
+                    cell.addEventListener('mouseout', () => {
+                        tooltip.style.display = 'none';
+                    });
+                }
+
+                td.appendChild(cell);
+                tr.appendChild(td);
+            });
+
+            tableBody.appendChild(tr);
+        });
+
+        // Renderowanie listy dziur
+        if (gapRanges.length > 0) {
+            gapsPanel.style.display = 'block';
+            gapRanges.forEach(gap => {
+                const item = document.createElement('div');
+                item.className = 'gap-item';
+                
+                const startStr = gap.start.toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' });
+                const endStr = gap.end.toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' });
+                
+                const diffMs = gap.end.getTime() - gap.start.getTime();
+                const diffHours = Math.ceil(diffMs / (1000 * 60 * 60)) + 1;
+
+                item.innerHTML = `
+                    <div class="gap-time">${startStr} &rarr; ${endStr}</div>
+                    <div class="gap-duration">${diffHours} godz. przerwy</div>
+                `;
+                gapsList.appendChild(item);
+            });
+        } else {
+            gapsPanel.style.display = 'none';
+        }
+    }
+
+    // Parsowanie daty YYYY-MM-DD HH:MM
+    function parseDateString(str) {
+        const regex = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/;
+        const match = str.match(regex);
+        if (!match) return null;
+        return new Date(
+            parseInt(match[1]),
+            parseInt(match[2]) - 1,
+            parseInt(match[3]),
+            parseInt(match[4]),
+            parseInt(match[5])
+        );
+    }
+
+    function formatDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+</script>
+
+</body>
+</html>

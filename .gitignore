@@ -1,21 +1,41 @@
-# Logi i pliki tymczasowe
+# Pliki wideo (timelapsy i pliki tymczasowe)
+*.mp4
+Temp_*.mp4
+temp_*.mp4
+
+# Wygenerowane pliki metadanych JSON
+*_metadata.json
+ocr_results.json
+
+# Logi i pliki tekstowe generowane dynamicznie
 LOGS/
 *.log
-files_list.txt
-merge_list.txt
+files_list*.txt
+merge_list*.txt
+filter_*.txt
 
-# Wyniki (filmy)
-VIDEO/
+# Katalogi tymczasowe klatek, zdjęcia i raporty
+temp_crop_*/
+ocr_report_*/
+JPEG/
 
-# Dane wejściowe (zdjęcia)
-# Ignorujemy pliki jpg, ale zachowujemy strukturę folderów kamer
-JPEG/**/*.jpg
-JPEG/**/*.txt
+# Pliki wykonywalne i binarne
+*.exe
+*.dll
+*.pdb
+*.suo
+*.user
+.vs/
+bin/
+obj/
 
 # Pliki konfiguracyjne z wrażliwymi danymi
 Blue Iris.reg
+*.conf
+*.json_secret
 
 # Systemowe
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+.DS_Store

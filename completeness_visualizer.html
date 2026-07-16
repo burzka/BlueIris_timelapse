@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wizualizacja Kompletności Klatek - BlueIris Timelapse</title>
+    <title>Edytor, Wizualizacja i Podgląd Klatek - BlueIris Timelapse</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@
 
         .container {
             max-width: 1400px;
-            margin: 0;
+            margin: 0 auto;
         }
 
         header {
@@ -48,6 +48,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         h1 {
@@ -65,6 +67,55 @@
             font-size: 1rem;
         }
 
+        /* Przyciski i akcje */
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.07);
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .btn-danger {
+            background: var(--color-missing);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
         /* Szklane Panele */
         .glass-panel {
             background: rgba(17, 24, 39, 0.65);
@@ -76,7 +127,7 @@
             margin-bottom: 24px;
         }
 
-        /* Dropzone do wczytywania JSON */
+        /* Dropzone do wczytywania JSON / MP4 */
         .dropzone {
             border: 2px dashed rgba(59, 130, 246, 0.4);
             border-radius: 16px;
@@ -105,6 +156,9 @@
         }
 
         #fileInput {
+            display: none;
+        }
+        #videoFileInput {
             display: none;
         }
 
@@ -213,7 +267,7 @@
 
         .hour-cell:hover {
             transform: scale(1.18);
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
             z-index: 10;
         }
 
@@ -230,17 +284,16 @@
         .cell-missing {
             background-color: var(--color-missing);
             box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
-            animation: pulse-missing 2s infinite;
         }
 
         .cell-empty {
             background-color: var(--color-empty);
+            cursor: default;
         }
-
-        @keyframes pulse-missing {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
+        
+        .cell-empty:hover {
+            transform: none;
+            box-shadow: none;
         }
 
         /* Tooltip */
@@ -308,6 +361,126 @@
             padding: 40px;
             font-size: 1.1rem;
         }
+
+        /* MODAL EDYCJI KLATEK */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #131a2c;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border-radius: 16px;
+            padding: 24px;
+            width: 520px;
+            max-width: 95%;
+            color: var(--text-primary);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            font-weight: 300;
+        }
+        
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .form-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 1rem;
+            padding: 4px 0;
+        }
+
+        .form-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .modal-buttons-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Sekcja podglądu wycinka daty */
+        .zoom-label-badge {
+            font-size: 0.75rem;
+            background: var(--accent);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -315,21 +488,43 @@
 <div class="container">
     <header>
         <div>
-            <h1>Raport Kompletności Nagrań</h1>
-            <p class="subtitle" id="cameraTitle">Załaduj plik metadanych JSON (np. Domofon_FULL_metadata.json), aby zobaczyć analizę kompletności.</p>
+            <h1>Raport i Korekcja Kompletności Klatek</h1>
+            <p class="subtitle" id="cameraTitle">Załaduj plik metadanych JSON, aby zweryfikować lub skorygować godziny klatek.</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="loadVideoBtn" onclick="document.getElementById('videoFileInput').click()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                    <line x1="7" y1="2" x2="7" y2="22"/>
+                    <line x1="17" y1="2" x2="17" y2="22"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <line x1="2" y1="7" x2="7" y2="7"/>
+                    <line x1="2" y1="17" x2="7" y2="17"/>
+                    <line x1="17" y1="17" x2="22" y2="17"/>
+                    <line x1="17" y1="7" x2="22" y2="7"/>
+                </svg>
+                Wczytaj wideo do podglądu
+            </button>
+            <button class="btn btn-primary" id="exportBtn" style="display: none;" onclick="exportCorrectedJson()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Zapisz skorygowany JSON
+            </button>
         </div>
     </header>
 
-    <!-- Dropzone dla JSON -->
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+    <!-- Dropzone dla JSON / MP4 -->
+    <div class="dropzone" id="dropzone">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent); margin-bottom: 10px;">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <p>Przeciągnij i upuść plik <strong>_metadata.json</strong> tutaj lub kliknij, aby wybrać z dysku</p>
-        <span>Obsługuje bezpośrednie pliki wyjściowe z podziału wideo</span>
-        <input type="file" id="fileInput" accept=".json">
+        <p>Przeciągnij i upuść plik <strong>_metadata.json</strong> lub wideo <strong>.mp4</strong> tutaj, lub kliknij obszar aby wczytać JSON</p>
+        <span>Po wczytaniu wideo możesz zobaczyć podgląd oraz powiększony zegar klatki</span>
     </div>
 
     <!-- Panel Statystyk -->
@@ -357,15 +552,15 @@
         <div class="legend">
             <div class="legend-item">
                 <div class="legend-color color-day"></div>
-                Dzień
+                Dzień (Kliknij aby edytować)
             </div>
             <div class="legend-item">
                 <div class="legend-color color-night"></div>
-                Noc
+                Noc (Kliknij aby edytować)
             </div>
             <div class="legend-item">
                 <div class="legend-color color-missing"></div>
-                Brak klatki (Dziura)
+                Brak klatki / Dziura (Kliknij aby dodać)
             </div>
         </div>
 
@@ -397,16 +592,76 @@
     </div>
 </div>
 
+<!-- Modal Edycji Klatki -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span id="modalTitle">Edycja Klatki</span>
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <!-- INTERAKTYWNY PODGLĄD KLATKI WIDEO -->
+        <div class="form-group" id="videoPreviewContainer">
+            <!-- 1. POWIĘKSZONA DATA (CROP) -->
+            <label style="display: flex; align-items: center;">
+                Powiększony Zegar z Kamery
+                <span class="zoom-label-badge">Lupa OCR</span>
+            </label>
+            <canvas id="datePreviewCanvas" style="width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #07090e; height: 75px; margin-bottom: 12px; display: none; image-rendering: pixelated; image-rendering: crisp-edges;"></canvas>
+            
+            <!-- 2. POGLĄD CAŁEGO OBRAZU -->
+            <label>Podgląd Obrazu Klatki</label>
+            <div id="videoPlaceholder" style="background: rgba(0,0,0,0.35); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 25px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                Brak podglądu obrazu.<br>
+                <span style="font-size: 0.85rem; cursor: pointer; color: var(--accent); text-decoration: underline; font-weight: 500;" onclick="document.getElementById('videoFileInput').click()">Wybierz plik wideo FULL (MP4)</span>, aby włączyć automatyczny podgląd i powiększenie zegara.
+            </div>
+            <video id="previewVideo" style="display: none; width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: #000; height: 160px; margin-bottom: 10px;" muted></video>
+        </div>
+
+        <div class="form-group">
+            <label for="modalFrame">Numer Klatki (Indeks)</label>
+            <input type="text" id="modalFrame" class="form-input" disabled>
+        </div>
+        
+        <div class="form-group">
+            <label for="modalTimestamp">Czas klatki (YYYY-MM-DD HH:MM)</label>
+            <input type="text" id="modalTimestamp" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-checkbox-label">
+                <input type="checkbox" id="modalIsDay" class="form-checkbox">
+                Czy to dzień? (Dzień / Noc)
+            </label>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="btn btn-danger" id="modalDeleteBtn" onclick="deleteCurrentFrame()">Usuń klatkę</button>
+            <div class="modal-buttons-right">
+                <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+                <button class="btn btn-primary" onclick="saveFrameEdits()">Zapisz</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Globalne inputy ukryte na dole strony poza elementami interaktywnymi -->
+<input type="file" id="fileInput" accept=".json">
+<input type="file" id="videoFileInput" accept="video/mp4">
+
 <!-- Globalny element tooltipa -->
 <div class="tooltip" id="globalTooltip"></div>
 
 <script>
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
+    const videoFileInput = document.getElementById('videoFileInput');
     const noDataInfo = document.getElementById('noDataInfo');
     const statsGrid = document.getElementById('statsGrid');
     const heatmapPanel = document.getElementById('heatmapPanel');
     const gapsPanel = document.getElementById('gapsPanel');
+    const exportBtn = document.getElementById('exportBtn');
+    const loadVideoBtn = document.getElementById('loadVideoBtn');
     
     const cameraTitle = document.getElementById('cameraTitle');
     const statTotalFrames = document.getElementById('statTotalFrames');
@@ -418,6 +673,25 @@
     const gapsList = document.getElementById('gapsList');
     const tooltip = document.getElementById('globalTooltip');
 
+    // Elementy modalu i wideo
+    const editModal = document.getElementById('editModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalFrame = document.getElementById('modalFrame');
+    const modalTimestamp = document.getElementById('modalTimestamp');
+    const modalIsDay = document.getElementById('modalIsDay');
+    const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+    const previewVideo = document.getElementById('previewVideo');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const datePreviewCanvas = document.getElementById('datePreviewCanvas');
+    const canvasCtx = datePreviewCanvas.getContext('2d');
+
+    // Dane globalne
+    let currentMetadata = [];
+    let originalFilename = "metadata.json";
+    let editingFrameId = null;
+    let addingFrameData = null;
+    let videoObjectUrl = null;
+
     // Inicjalizacja nagłówków godzin (00 - 23)
     for (let h = 0; h < 24; h++) {
         const th = document.createElement('th');
@@ -425,24 +699,31 @@
         tableHeader.appendChild(th);
     }
 
-    // Automatyczne wczytanie przy starcie, jeśli plik leży w tym samym folderze
+    // Automatyczne wczytanie przy starcie
     window.addEventListener('DOMContentLoaded', () => {
-        // Próbujemy wczytać z tego samego folderu
         fetch('Domofon_FULL_metadata.json')
             .then(res => {
                 if (res.ok) return res.json();
                 throw new Error('Local file not found');
             })
             .then(data => {
-                cameraTitle.innerText = "Automatycznie wczytano: Domofon_FULL_metadata.json";
-                processMetadata(data);
+                cameraTitle.innerText = "Załadowano lokalny plik: Domofon_FULL_metadata.json";
+                originalFilename = "Domofon_FULL_metadata.json";
+                currentMetadata = data;
+                processMetadata(currentMetadata);
+                exportBtn.style.display = 'inline-flex';
             })
             .catch(err => {
-                console.log("Automatyczne wczytanie lokalnego pliku pominięte (brak pliku lub CORS). Oczekiwanie na użytkownika.");
+                console.log("Brak lokalnego pliku automatycznego. Czekam na plik od użytkownika.");
             });
     });
 
-    // Obsługa drag & drop
+    // Obsługa kliknięcia w dropzone (wywołuje TYLKO wczytanie JSON)
+    dropzone.addEventListener('click', (e) => {
+        fileInput.click();
+    });
+
+    // Obsługa drag & drop (inteligentna - obsługuje zarówno JSON, jak i MP4)
     dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropzone.style.borderColor = 'var(--accent)';
@@ -457,15 +738,50 @@
         dropzone.style.borderColor = 'rgba(59, 130, 246, 0.4)';
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            handleFile(files[0]);
+            const file = files[0];
+            if (file.name.endsWith('.json')) {
+                handleFile(file);
+            } else if (file.name.endsWith('.mp4')) {
+                handleVideoFile(file);
+            } else {
+                alert('Nieobsługiwany format pliku! Wrzuć plik metadanych .json lub wideo .mp4.');
+            }
         }
     });
 
+    // Wybór pliku JSON przez input
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             handleFile(e.target.files[0]);
         }
     });
+
+    // Wybór pliku Wideo przez input
+    videoFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleVideoFile(e.target.files[0]);
+        }
+    });
+
+    function handleVideoFile(file) {
+        if (videoObjectUrl) {
+            URL.revokeObjectURL(videoObjectUrl);
+        }
+        videoObjectUrl = URL.createObjectURL(file);
+        videoPlaceholder.style.display = 'none';
+        previewVideo.style.display = 'block';
+        loadVideoBtn.innerText = `Podgląd: ${file.name}`;
+        loadVideoBtn.style.background = 'rgba(16, 185, 129, 0.15)';
+        loadVideoBtn.style.color = '#10b981';
+        loadVideoBtn.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        
+        // Jeśli modal jest otwarty, odświeżamy wideo
+        if (editModal.style.display === 'flex' && editingFrameId !== null) {
+            const timeInSeconds = (editingFrameId - 1) / 30;
+            previewVideo.src = videoObjectUrl;
+            previewVideo.currentTime = timeInSeconds;
+        }
+    }
 
     function handleFile(file) {
         if (!file.name.endsWith('.json')) {
@@ -474,12 +790,15 @@
         }
         
         cameraTitle.innerText = `Wczytano plik: ${file.name}`;
+        originalFilename = file.name;
         
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                processMetadata(data);
+                currentMetadata = data;
+                processMetadata(currentMetadata);
+                exportBtn.style.display = 'inline-flex';
             } catch (err) {
                 alert('Błąd podczas parsowania pliku JSON: ' + err.message);
             }
@@ -489,21 +808,35 @@
 
     function processMetadata(data) {
         if (!Array.isArray(data) || data.length === 0) {
-            alert('Niepoprawny format danych w pliku JSON!');
+            noDataInfo.style.display = 'block';
+            statsGrid.style.display = 'none';
+            heatmapPanel.style.display = 'none';
+            gapsPanel.style.display = 'none';
+            exportBtn.style.display = 'none';
             return;
         }
 
-        // Ukrywamy ekran powitalny
         noDataInfo.style.display = 'none';
         statsGrid.style.display = 'grid';
         heatmapPanel.style.display = 'block';
         tableBody.innerHTML = '';
         gapsList.innerHTML = '';
 
-        // Parsowanie dat i budowanie mapy godzin
+        // Sortowanie metadanych chronologicznie
+        data.sort((a, b) => {
+            const da = parseDateString(a.timestamp) || new Date(0);
+            const db = parseDateString(b.timestamp) || new Date(0);
+            return da - db;
+        });
+
+        // Uaktualnienie indeksów klatek po posortowaniu, aby były 1..N
+        data.forEach((item, idx) => {
+            item.frame = idx + 1;
+        });
+
         let minDate = null;
         let maxDate = null;
-        const frameMap = {}; // Klucz: "YYYY-MM-DD HH"
+        const frameMap = {};
 
         data.forEach(item => {
             if (!item.timestamp) return;
@@ -529,16 +862,13 @@
             return;
         }
 
-        // Liczymy zakres dni w kalendarzu
         const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         
         let presentCount = 0;
         let expectedCount = 0;
-        let gapsCount = 0;
         const gapRanges = [];
         let currentGapStart = null;
 
-        // Generujemy kalendarz i analizujemy dziury
         const currentDate = new Date(minDate);
         currentDate.setHours(0, 0, 0, 0);
         
@@ -555,8 +885,6 @@
                 const checkTime = new Date(currentDate);
                 checkTime.setHours(h);
                 
-                // Ignorujemy godziny przed pierwszym nagraniem pierwszego dnia
-                // Oraz godziny po ostatnim nagraniu ostatniego dnia
                 if (checkTime < minDate || checkTime > maxDate) {
                     rowHours.push({ status: 'empty' });
                     continue;
@@ -571,10 +899,11 @@
                     rowHours.push({
                         status: frameInfo.isDay ? 'day' : 'night',
                         frame: frameInfo.frame,
-                        timestamp: frameInfo.timestamp
+                        timestamp: frameInfo.timestamp,
+                        date: dateStr,
+                        hour: h
                     });
 
-                    // Jeśli trwała dziura, to ją zamykamy
                     if (currentGapStart) {
                         const gapEnd = new Date(checkTime);
                         gapEnd.setHours(gapEnd.getHours() - 1);
@@ -582,10 +911,13 @@
                         currentGapStart = null;
                     }
                 } else {
-                    gapsCount++;
-                    rowHours.push({ status: 'missing', timestamp: checkTime.toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'short' }) });
+                    rowHours.push({ 
+                        status: 'missing', 
+                        date: dateStr,
+                        hour: h,
+                        expectedTime: `${dateStr} ${String(h).padStart(2, '0')}:59` 
+                    });
 
-                    // Jeśli to start nowej dziury, zapisujemy go
                     if (!currentGapStart) {
                         currentGapStart = new Date(checkTime);
                     }
@@ -596,7 +928,6 @@
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
-        // Zamykamy ostatnią dziurę jeśli wciąż trwała
         if (currentGapStart) {
             gapRanges.push({ start: currentGapStart, end: new Date(maxDate) });
         }
@@ -608,7 +939,6 @@
         const completeness = expectedCount > 0 ? ((presentCount / expectedCount) * 100).toFixed(1) : 0;
         statCompleteness.innerText = `${completeness}%`;
         statCompleteness.style.color = completeness > 95 ? 'var(--color-day)' : (completeness > 80 ? '#fbbf24' : 'var(--color-missing)');
-        
         statGaps.innerText = gapRanges.length;
 
         // Renderowanie Heatmapy
@@ -625,14 +955,13 @@
                 const cell = document.createElement('div');
                 cell.className = `hour-cell cell-${hour.status}`;
                 
-                // Obsługa tooltipa
                 if (hour.status !== 'empty') {
                     cell.addEventListener('mouseover', (e) => {
                         let tooltipHtml = '';
                         if (hour.status === 'day' || hour.status === 'night') {
-                            tooltipHtml = `<strong>Klatka ${hour.frame}</strong><br>Czas: ${hour.timestamp}<br>Status: ${hour.status === 'day' ? 'Dzień' : 'Noc'}`;
+                            tooltipHtml = `<strong>Klatka ${hour.frame} (Kliknij, aby edytować)</strong><br>Czas: ${hour.timestamp}<br>Status: ${hour.status === 'day' ? 'Dzień' : 'Noc'}`;
                         } else {
-                            tooltipHtml = `<strong>BRAK KLATKI</strong><br>Oczekiwany czas: ${row.date} ${String(hIdx).padStart(2, '0')}:59`;
+                            tooltipHtml = `<strong>BRAK NAGRANIA (Kliknij, aby dodać klatkę)</strong><br>Oczekiwany czas: ${hour.expectedTime}`;
                         }
                         tooltip.innerHTML = tooltipHtml;
                         tooltip.style.display = 'block';
@@ -645,6 +974,11 @@
 
                     cell.addEventListener('mouseout', () => {
                         tooltip.style.display = 'none';
+                    });
+
+                    cell.addEventListener('click', () => {
+                        tooltip.style.display = 'none';
+                        openEditor(hour);
                     });
                 }
 
@@ -677,6 +1011,169 @@
         } else {
             gapsPanel.style.display = 'none';
         }
+    }
+
+    // --- LOGIKA OBSŁUGI CROP / LUPY NA ZEGAR KAMERY ---
+    previewVideo.addEventListener('seeked', () => {
+        drawZoomedClock();
+    });
+
+    function drawZoomedClock() {
+        const vw = previewVideo.videoWidth;
+        const vh = previewVideo.videoHeight;
+        if (vw === 0 || vh === 0) return;
+
+        // Domyślny crop dla rozdzielczości 1080p (np. Domofon)
+        let cropX = 5;
+        let cropY = 0;
+        let cropW = 600;
+        let cropH = 100;
+
+        // Jeśli to kamera 4K (rozdzielczość powyżej 2000px szerokości)
+        if (vw > 2000) {
+            cropX = 10;
+            cropY = 0;
+            cropW = 1200;
+            cropH = 180;
+        }
+
+        // Dopasowujemy wymiary wewnętrzne canvasa do wycinka
+        datePreviewCanvas.width = cropW;
+        datePreviewCanvas.height = cropH;
+
+        // Rysujemy wycinek z wideo na canvas
+        canvasCtx.drawImage(previewVideo, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+        datePreviewCanvas.style.display = 'block';
+    }
+
+    // --- DIALOG MODALNY EDYCJI ---
+    function openEditor(hourInfo) {
+        editingFrameId = null;
+        addingFrameData = null;
+
+        let frameNumberToSeek = null;
+
+        if (hourInfo.status === 'day' || hourInfo.status === 'night') {
+            editingFrameId = hourInfo.frame;
+            frameNumberToSeek = hourInfo.frame;
+            modalTitle.innerText = `Edycja Klatki #${hourInfo.frame}`;
+            modalFrame.value = hourInfo.frame;
+            modalTimestamp.value = hourInfo.timestamp;
+            modalIsDay.checked = (hourInfo.status === 'day');
+            modalDeleteBtn.style.display = 'block';
+        } else {
+            addingFrameData = {
+                date: hourInfo.date,
+                hour: hourInfo.hour
+            };
+            modalTitle.innerText = "Dodaj Nową Klatkę";
+            modalFrame.value = "(Nowa klatka)";
+            modalTimestamp.value = `${hourInfo.date} ${String(hourInfo.hour).padStart(2, '0')}:00`;
+            
+            const h = hourInfo.hour;
+            modalIsDay.checked = (h >= 6 && h <= 18);
+            modalDeleteBtn.style.display = 'none';
+        }
+
+        // Seek w wideo, jeśli jest załadowane
+        if (videoObjectUrl && frameNumberToSeek !== null) {
+            videoPlaceholder.style.display = 'none';
+            previewVideo.style.display = 'block';
+            
+            const timeInSeconds = (frameNumberToSeek - 1) / 30;
+            previewVideo.src = videoObjectUrl;
+            
+            previewVideo.onloadedmetadata = function() {
+                previewVideo.currentTime = timeInSeconds;
+            };
+            previewVideo.currentTime = timeInSeconds;
+        } else {
+            videoPlaceholder.style.display = 'block';
+            previewVideo.style.display = 'none';
+            datePreviewCanvas.style.display = 'none';
+        }
+
+        editModal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        editModal.style.display = 'none';
+        previewVideo.src = "";
+        datePreviewCanvas.style.display = 'none';
+    }
+
+    // Zapisywanie zmian
+    function saveFrameEdits() {
+        const inputTime = modalTimestamp.value.trim();
+        const isDay = modalIsDay.checked;
+
+        if (!inputTime) {
+            alert('Wpisz poprawny czas klatki!');
+            return;
+        }
+
+        if (editingFrameId !== null) {
+            const frameObj = currentMetadata.find(item => item.frame === editingFrameId);
+            if (frameObj) {
+                frameObj.timestamp = inputTime;
+                frameObj.isDay = isDay;
+            }
+        } else if (addingFrameData !== null) {
+            const newFrame = {
+                frame: currentMetadata.length + 1,
+                timestamp: inputTime,
+                isDay: isDay
+            };
+            currentMetadata.push(newFrame);
+        }
+
+        closeModal();
+        processMetadata(currentMetadata);
+    }
+
+    // Usuwanie klatki
+    function deleteCurrentFrame() {
+        if (editingFrameId === null) return;
+        
+        if (confirm(`Czy na pewno chcesz usunąć klatkę #${editingFrameId} z metadanych?`)) {
+            currentMetadata = currentMetadata.filter(item => item.frame !== editingFrameId);
+            closeModal();
+            processMetadata(currentMetadata);
+        }
+    }
+
+    // Eksport do JSON
+    function exportCorrectedJson() {
+        currentMetadata.sort((a, b) => {
+            const da = parseDateString(a.timestamp) || new Date(0);
+            const db = parseDateString(b.timestamp) || new Date(0);
+            return da - db;
+        });
+
+        const cleanedMetadata = currentMetadata.map((item, idx) => {
+            return {
+                frame: idx + 1,
+                timestamp: item.timestamp,
+                isDay: item.isDay
+            };
+        });
+
+        const jsonStr = JSON.stringify(cleanedMetadata, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        let outName = originalFilename.replace('_raw_metadata.json', '_metadata.json');
+        if (outName === originalFilename && !outName.includes('_metadata.json')) {
+            outName = originalFilename.replace('.json', '_metadata.json');
+        }
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = outName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     // Parsowanie daty YYYY-MM-DD HH:MM

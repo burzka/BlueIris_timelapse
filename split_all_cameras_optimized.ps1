@@ -8,7 +8,7 @@ foreach ($cam in $cameras) {
         Write-Host "`n================ PRZETWARZAM: $cam ================" -ForegroundColor Cyan
         powershell -File "$PSScriptRoot\split_camera_ocr.ps1" -videoPath $videoFile
         
-        # Kopiowanie wyników do katalogu produkcyjnego VIDEO
+        # Kopiowanie wynikow do katalogu produkcyjnego VIDEO
         $destDir = "C:\BlueIris_timelapse\VIDEO\$cam"
         if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
         
@@ -20,8 +20,8 @@ foreach ($cam in $cameras) {
         if (Test-Path $nightFile) { Copy-Item $nightFile -Destination "$destDir\$nightFile" -Force; Write-Host "   -> Skopiowano $nightFile do $destDir" -ForegroundColor Gray }
         if (Test-Path $jsonFile) { Copy-Item $jsonFile -Destination "$destDir\$jsonFile" -Force; Write-Host "   -> Skopiowano $jsonFile do $destDir" -ForegroundColor Gray }
     } else {
-        Write-Host "⚠️ Brak pliku: $videoFile" -ForegroundColor Yellow
+        Write-Host "[UWAGA] Brak pliku: $videoFile" -ForegroundColor Yellow
     }
 }
 
-Write-Host "`nWSZYSTKIE KAMERY ZOSTAŁY POMYŚLNIE PODZIELONE!" -ForegroundColor Green
+Write-Host "`nWSZYSTKIE KAMERY ZOSTALY POMYSLNIE PODZIELONE!" -ForegroundColor Green

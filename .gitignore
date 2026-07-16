@@ -3,8 +3,9 @@
 Temp_*.mp4
 temp_*.mp4
 
-# Wygenerowane pliki metadanych JSON
+# Wygenerowane pliki metadanych JSON i cache OCR
 *_metadata.json
+*_ocr_cache.json
 ocr_results.json
 
 # Logi i pliki tekstowe generowane dynamicznie

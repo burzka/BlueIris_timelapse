@@ -4,17 +4,7 @@ import json
 import glob
 import base64
 import urllib.request
-from PIL import Image
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-def get_brightness(file_path):
-    try:
-        with Image.open(file_path) as img:
-            img_gray = img.convert('L')
-            img_tiny = img_gray.resize((1, 1))
-            return img_tiny.getpixel((0, 0))
-    except:
-        return 0
 
 def query_ollama(file_path):
     try:
@@ -23,7 +13,7 @@ def query_ollama(file_path):
             
         data = {
             "model": "glm-ocr",
-            "prompt": "Extract the timestamp from this security camera image crop. Return ONLY the date and time in YYYY-MM-DD HH:MM:SS format, nothing else.",
+            "prompt": "OCR: read the date and time from this image. Return it exactly as displayed, do not reformat.",
             "images": [encoded_string],
             "stream": False,
             "options": {
@@ -42,11 +32,11 @@ def query_ollama(file_path):
             res = json.loads(response.read().decode('utf-8'))
             return res.get('response', '').strip()
     except Exception as e:
-        return f"BŁĄD OLLAMA: {str(e)}"
+        return f"ERROR OLLAMA: {str(e)}"
 
 def main():
     if len(sys.argv) < 2:
-        print("BŁĄD: Brak ścieżki do pliku lub katalogu")
+        print("ERROR: Brak sciezki do pliku lub katalogu")
         return
         
     path = os.path.abspath(sys.argv[1])
@@ -56,33 +46,31 @@ def main():
         results = {}
         
         total = len(files)
-        sys.stdout.write(f"Inicjalizacja Ollama (glm-ocr) dla {total} plików (wielowątkowo)...\n")
+        sys.stdout.write(f"Inicjalizacja Ollama (glm-ocr) dla {total} plikow (wielowatkowo)...\n")
         sys.stdout.flush()
         
         def process_file(file_path):
             file_name = os.path.basename(file_path)
-            brightness = get_brightness(file_path)
             text = query_ollama(file_path)
-            return file_name, text, brightness
+            return file_name, text
             
         completed = 0
-        # Używamy 6 równoległych wątków
+        # Uzywamy 6 rownoleglych watkow
         with ThreadPoolExecutor(max_workers=6) as executor:
             future_to_file = {executor.submit(process_file, f): f for f in files}
             for future in as_completed(future_to_file):
-                file_name, text, brightness = future.result()
+                file_name, text = future.result()
                 results[file_name] = {
-                    "text": text,
-                    "brightness": brightness
+                    "text": text
                 }
                 completed += 1
                 
-                # Dynamiczny pasek postępu co 20 klatek
+                # Dynamiczny pasek postepu co 20 klatek
                 if completed % 20 == 0 or completed == total:
                     percent = int(completed / total * 100)
                     bar_length = 40
                     filled = int(percent / 100 * bar_length)
-                    bar = "█" * filled + "-" * (bar_length - filled)
+                    bar = "#" * filled + "-" * (bar_length - filled)
                     sys.stdout.write(f"\rOllama GLM-OCR: |{bar}| {percent}% ({completed}/{total}) klatek")
                     sys.stdout.flush()
                     
@@ -93,14 +81,13 @@ def main():
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False)
             
-        print(f"SUKCES: Zapisano {len(results)} wyników w {json_path}")
+        print(f"SUKCES: Zapisano {len(results)} wynikow w {json_path}")
         
     elif os.path.isfile(path):
-        brightness = get_brightness(path)
         text = query_ollama(path)
-        print(f"{text}|{brightness}", end="")
+        print(f"{text}", end="")
     else:
-        print(f"BŁĄD: Ścieżka nie istnieje: {path}")
+        print(f"ERROR: Sciezka nie istnieje: {path}")
 
 if __name__ == "__main__":
     main()

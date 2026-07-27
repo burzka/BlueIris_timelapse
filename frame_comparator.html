@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porównywarka Klatek Wideo Timelapse - BlueIris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: #121826;
+            --bg-card-hover: #1a2337;
+            --bg-input: #1a2234;
+            --border-color: #26334d;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.3);
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at top center, #111827 0%, #030712 100%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #ffffff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .file-select-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        select, input[type="file"], button {
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        select {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-file {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-file:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            flex: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-purple { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); }
+
+        /* Player Container */
+        .media-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            min-width: 110px;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .btn-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-active-toggle {
+            background: var(--accent-purple);
+            color: white;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-frame-a {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        .btn-frame-a:hover {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+            box-shadow: 0 0 12px var(--accent-green-glow);
+        }
+
+        .btn-frame-b {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        .btn-frame-b:hover {
+            background: rgba(245, 158, 11, 0.3);
+            border-color: #f59e0b;
+        }
+
+        /* Comparison View Container */
+        .comparison-modes {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-input);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 6px 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .mode-tab.active {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .view-canvas-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #04070d;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            cursor: grab;
+            user-select: none;
+        }
+
+        .view-canvas-container.calibration-mode {
+            cursor: crosshair;
+            border: 2px solid var(--accent-purple);
+        }
+
+        .view-canvas-container:fullscreen,
+        .view-canvas-container:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            aspect-ratio: auto !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+
+        .view-canvas-container:active {
+            cursor: grabbing;
+        }
+
+        .view-canvas-container.calibration-mode:active {
+            cursor: crosshair;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* Split Curtain Handle Overlay */
+        .curtain-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 12px var(--accent);
+            cursor: ew-resize;
+            z-index: 10;
+        }
+
+        .curtain-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            background: #ffffff;
+            color: #0b0f19;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .frame-indicator {
+            position: absolute;
+            top: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 5;
+            backdrop-filter: blur(8px);
+        }
+
+        .indicator-a {
+            left: 12px;
+            background: rgba(16, 185, 129, 0.85);
+            color: white;
+        }
+
+        .indicator-b {
+            right: 12px;
+            background: rgba(245, 158, 11, 0.85);
+            color: white;
+        }
+
+        .calibration-banner {
+            position: absolute;
+            top: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 92, 246, 0.9);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            z-index: 15;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            pointer-events: none;
+            display: none;
+            backdrop-filter: blur(4px);
+        }
+
+        .fullscreen-exit-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.85);
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            display: none;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .zoom-info {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Panel Kalibracji Wyrównania */
+        .calibration-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .calibration-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .points-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .point-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-input);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .point-tag {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .tag-a { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .tag-b { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+        .btn-del-point {
+            background: transparent;
+            color: var(--accent-red);
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px 6px;
+        }
+
+        .btn-del-point:hover {
+            color: #f87171;
+        }
+
+        .shortcut-hint {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        kbd {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-title">
+            <div class="logo-icon">VS</div>
+            <div>
+                <h1>Porównywarka Klatek Wideo (Timelapse)</h1>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Analiza zmian w przyrodzie i terenie z kalibracją ruszającej się kamery</p>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <div class="file-select-group">
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Wideo z folderu:</span>
+                <select id="presetVideoSelect">
+                    <option value="Front_DAY.mp4">Front_DAY.mp4</option>
+                    <option value="Domofon_DAY.mp4">Domofon_DAY.mp4</option>
+                    <option value="Polnoc_DAY.mp4">Polnoc_DAY.mp4</option>
+                    <option value="Poludnie_DAY.mp4">Poludnie_DAY.mp4</option>
+                    <option value="Taras_DAY.mp4">Taras_DAY.mp4</option>
+                </select>
+                <button class="btn" id="btnLoadPreset">Załaduj</button>
+            </div>
+
+            <label class="btn-file">
+                📁 Wybierz plik MP4 z dysku
+                <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
+            </label>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Odtwarzacz Wideo i Wybór Klatek -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🎬 Odtwarzacz Źródłowy</span>
+                    <span class="badge badge-blue" id="videoNameBadge">Brak wideo</span>
+                </div>
+                <div class="time-display" id="timeDisplay">00:00.00 / 00:00.00</div>
+            </div>
+
+            <div class="media-container">
+                <video id="videoPlayer" preload="auto" crossorigin="anonymous"></video>
+            </div>
+
+            <div class="controls-panel">
+                <div class="slider-row">
+                    <input type="range" id="timeSeeker" min="0" max="100" step="0.01" value="0">
+                </div>
+
+                <div class="btn-grid">
+                    <button class="btn" id="btnStepBack5s" title="Cofnij o 5 sekund">⏮️ -5s</button>
+                    <button class="btn" id="btnStepBack1s" title="Cofnij o 1 sekundę">⏪ -1s</button>
+                    <button class="btn" id="btnStepBackFrame" title="Cofnij o 1 klatkę (~0.033s)">◀ -1 f</button>
+                    <button class="btn btn-primary" id="btnPlayPause">▶️ Odtwarzaj</button>
+                    <button class="btn" id="btnStepForwardFrame" title="Do przodu o 1 klatkę (~0.033s)">+1 f ▶</button>
+                    <button class="btn" id="btnStepForward1s" title="Do przodu o 1 sekundę">+1s ⏩</button>
+                    <button class="btn" id="btnStepForward5s" title="Do przodu o 5 sekund">+5s ⏭️</button>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 6px;">
+                    <button class="btn btn-frame-a" id="btnCaptureA" style="flex: 1;">
+                        📌 Zapisz jako Klatkę A (Wiosna/Początek) <kbd>A</kbd>
+                    </button>
+                    <button class="btn btn-frame-b" id="btnCaptureB" style="flex: 1;">
+                        📌 Zapisz jako Klatkę B (Zima/Koniec) <kbd>B</kbd>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moduł Porównywania Klatek -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🔬 Porównywarka i Kalibrator</span>
+                    <span class="badge badge-purple" id="alignStatusBadge">Kalibracja: Wyłączona</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" id="btnFullscreen" style="padding: 4px 10px; font-size: 0.8rem;">🖥️ Pełny ekran <kbd>F</kbd></button>
+                    <button class="btn" id="btnResetZoom" style="padding: 4px 10px; font-size: 0.8rem;">🔍 Reset Zoom</button>
+                    <button class="btn" id="btnExportImage" style="padding: 4px 10px; font-size: 0.8rem;">💾 Pobierz Obraz</button>
+                </div>
+            </div>
+
+            <!-- Tryby porównywania -->
+            <div class="comparison-modes">
+                <div class="mode-tab active" data-mode="toggle">Szybkie Przełączanie (A/B)</div>
+                <div class="mode-tab" data-mode="split">Suwak Dzielony (Curtain)</div>
+                <div class="mode-tab" data-mode="blend">Przenikanie (Opacity)</div>
+                <div class="mode-tab" data-mode="side">Obok Siebie</div>
+            </div>
+
+            <div class="view-canvas-container" id="canvasContainer">
+                <div class="frame-indicator indicator-a" id="indicatorA">Klatka A: Nie wybrano</div>
+                <div class="frame-indicator indicator-b" id="indicatorB">Klatka B: Nie wybrano</div>
+
+                <div class="calibration-banner" id="calibrationBanner">
+                    🎯 Kliknij nieruchomy punkt na Klatce A [Pkt #1], a potem ten sam punkt na Klatce B
+                </div>
+
+                <!-- Kurtyna do suwaka dzielonego -->
+                <div class="curtain-handle" id="curtainHandle" style="display: none; left: 50%;">
+                    <div class="curtain-button">↔</div>
+                </div>
+
+                <button class="fullscreen-exit-btn" id="fullscreenExitBtn">❌ Wyjdź z pełnego ekranu <kbd>Esc</kbd></button>
+
+                <canvas id="compCanvas"></canvas>
+            </div>
+
+            <div class="zoom-controls">
+                <div class="zoom-info" id="zoomInfo">Powiększenie: 100% | Pozycja: (0, 0)</div>
+                <div id="extraControls" style="display: flex; align-items: center; gap: 10px;">
+                    <!-- Pokazywane w trybie Opacity -->
+                    <div id="opacitySliderGroup" style="display: none; align-items: center; gap: 6px;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Przezroczystość B:</span>
+                        <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="0.5" style="width: 120px;">
+                    </div>
+                    <!-- Pokazywane w trybie Toggle -->
+                    <button class="btn btn-primary" id="btnToggleAB" style="padding: 4px 12px; font-size: 0.85rem;">
+                        Przełącz A ↔ B <kbd>Spacja</kbd>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Kalibracji / Wyrównania Klatek -->
+            <div class="calibration-panel">
+                <div class="calibration-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn" id="btnToggleCalibration" style="font-size: 0.85rem;">
+                            🎯 Tryb Stawiania Punktów Kontrolnych <kbd>C</kbd>
+                        </button>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; color: var(--text-main);">
+                            <input type="checkbox" id="chkEnableAlignment" checked> Włącz wyrównywanie Klatki B do A
+                        </label>
+                    </div>
+                    <button class="btn" id="btnClearPoints" style="padding: 4px 10px; font-size: 0.8rem; color: var(--accent-red);">
+                        🗑️ Usuń Wszystkie Punkty
+                    </button>
+                </div>
+
+                <div class="points-list" id="pointsListContainer">
+                    <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 6px;">
+                        Brak punktów kalibracyjnych. Kliknij "Tryb Stawiania Punktów", aby wyrównać przesunięcie kamery.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="shortcut-hint">
+        <div>💡 <strong>Skróty klawiszowe i mysz:</strong></div>
+        <div><kbd>A</kbd> Ustaw Klatkę A</div>
+        <div><kbd>B</kbd> Ustaw Klatkę B</div>
+        <div><kbd>Spacja</kbd> / <kbd>Tab</kbd> Przełącz Klatkę A/B</div>
+        <div><kbd>C</kbd> Włącz/Wyłącz Tryb Edycji Punktów</div>
+        <div><kbd>F</kbd> Tryb Pełnoekranowy (Fullscreen)</div>
+        <div><kbd>Środkowy / Prawy Przycisk Myszy</kbd> Przesuwanie Obrazu (Pan)</div>
+        <div><kbd>Kółko myszy</kbd> Zoom w punkcie kursora</div>
+    </div>
+
+    <script>
+        // Elementy DOM
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoFileInput = document.getElementById('videoFileInput');
+        const presetVideoSelect = document.getElementById('presetVideoSelect');
+        const btnLoadPreset = document.getElementById('btnLoadPreset');
+        const timeSeeker = document.getElementById('timeSeeker');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const videoNameBadge = document.getElementById('videoNameBadge');
+
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const btnStepBack5s = document.getElementById('btnStepBack5s');
+        const btnStepBack1s = document.getElementById('btnStepBack1s');
+        const btnStepBackFrame = document.getElementById('btnStepBackFrame');
+        const btnStepForwardFrame = document.getElementById('btnStepForwardFrame');
+        const btnStepForward1s = document.getElementById('btnStepForward1s');
+        const btnStepForward5s = document.getElementById('btnStepForward5s');
+
+        const btnCaptureA = document.getElementById('btnCaptureA');
+        const btnCaptureB = document.getElementById('btnCaptureB');
+        const indicatorA = document.getElementById('indicatorA');
+        const indicatorB = document.getElementById('indicatorB');
+
+        const compCanvas = document.getElementById('compCanvas');
+        const ctx = compCanvas.getContext('2d');
+        const canvasContainer = document.getElementById('canvasContainer');
+        const curtainHandle = document.getElementById('curtainHandle');
+        const modeTabs = document.querySelectorAll('.mode-tab');
+        const btnToggleAB = document.getElementById('btnToggleAB');
+        const opacitySliderGroup = document.getElementById('opacitySliderGroup');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const zoomInfo = document.getElementById('zoomInfo');
+        const btnResetZoom = document.getElementById('btnResetZoom');
+        const btnExportImage = document.getElementById('btnExportImage');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+        const fullscreenExitBtn = document.getElementById('fullscreenExitBtn');
+
+        // Elementy Kalibracji
+        const btnToggleCalibration = document.getElementById('btnToggleCalibration');
+        const chkEnableAlignment = document.getElementById('chkEnableAlignment');
+        const btnClearPoints = document.getElementById('btnClearPoints');
+        const pointsListContainer = document.getElementById('pointsListContainer');
+        const alignStatusBadge = document.getElementById('alignStatusBadge');
+        const calibrationBanner = document.getElementById('calibrationBanner');
+
+        // Stan Aplikacji
+        let frameA = null;
+        let timeA = null;
+        let frameB = null;
+        let timeB = null;
+
+        let activeMode = 'toggle'; // 'toggle', 'split', 'blend', 'side'
+        let activeToggleFrame = 'A'; // 'A' lub 'B'
+        let splitRatio = 0.5; // 0.0 do 1.0 dla curtain
+        let isDraggingCurtain = false;
+
+        // Powiększanie i przesuwanie (Zoom & Pan)
+        let zoomScale = 1.0;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let startPanX = 0;
+        let startPanY = 0;
+        let panStartX = 0;
+        let panStartY = 0;
+        let hasPanned = false; // Flaga wykrywająca przesunięcie obrazu myszą
+
+        // Stan Kalibracji Klatek
+        let isCalibrationActive = false;
+        let pendingPointA = null; // Tymczasowo kliknięty punkt na A przed podaniem punktu B
+        let calibrationPairs = []; // Lista par [{ ax, ay, bx, by }, ...] w ułamkach [0, 1]
+
+        const FRAME_TIME = 1 / 30; // Zakładamy ok. 30 fps
+
+        // Ładowanie domyślnego lub wskazanego wideo
+        function loadVideoSource(url, name) {
+            videoPlayer.src = url;
+            videoPlayer.load();
+            videoNameBadge.textContent = name;
+        }
+
+        // Domyślny rozruch z plikiem z listy
+        loadVideoSource(presetVideoSelect.value, presetVideoSelect.value);
+
+        btnLoadPreset.addEventListener('click', () => {
+            loadVideoSource(presetVideoSelect.value, presetVideoSelect.value);
+        });
+
+        videoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                loadVideoSource(url, file.name);
+            }
+        });
+
+        // Odtwarzacz - Aktualizacja Czasu
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "00:00.00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 100);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+        }
+
+        videoPlayer.addEventListener('loadedmetadata', () => {
+            timeSeeker.max = videoPlayer.duration;
+            updateTimeDisplay();
+            resizeCanvas();
+        });
+
+        videoPlayer.addEventListener('timeupdate', () => {
+            timeSeeker.value = videoPlayer.currentTime;
+            updateTimeDisplay();
+        });
+
+        timeSeeker.addEventListener('input', () => {
+            videoPlayer.currentTime = parseFloat(timeSeeker.value);
+            updateTimeDisplay();
+        });
+
+        function updateTimeDisplay() {
+            timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
+        }
+
+        // Kontrolki Odtwarzacza
+        btnPlayPause.addEventListener('click', () => {
+            if (videoPlayer.paused) {
+                videoPlayer.play();
+                btnPlayPause.textContent = '⏸️ Pauza';
+            } else {
+                videoPlayer.pause();
+                btnPlayPause.textContent = '▶️ Odtwarzaj';
+            }
+        });
+
+        function stepTime(delta) {
+            videoPlayer.pause();
+            btnPlayPause.textContent = '▶️ Odtwarzaj';
+            videoPlayer.currentTime = Math.max(0, Math.min(videoPlayer.duration, videoPlayer.currentTime + delta));
+        }
+
+        btnStepBack5s.addEventListener('click', () => stepTime(-5));
+        btnStepBack1s.addEventListener('click', () => stepTime(-1));
+        btnStepBackFrame.addEventListener('click', () => stepTime(-FRAME_TIME));
+        btnStepForwardFrame.addEventListener('click', () => stepTime(FRAME_TIME));
+        btnStepForward1s.addEventListener('click', () => stepTime(1));
+        btnStepForward5s.addEventListener('click', () => stepTime(5));
+
+        // Przechwytywanie Klatek A i B
+        function captureFrame(type) {
+            if (!videoPlayer.videoWidth) return;
+
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = videoPlayer.videoWidth;
+            offCanvas.height = videoPlayer.videoHeight;
+            const offCtx = offCanvas.getContext('2d');
+            offCtx.drawImage(videoPlayer, 0, 0, offCanvas.width, offCanvas.height);
+
+            if (type === 'A') {
+                frameA = offCanvas;
+                timeA = videoPlayer.currentTime;
+                indicatorA.textContent = `Klatka A: ${formatTime(timeA)}`;
+            } else {
+                frameB = offCanvas;
+                timeB = videoPlayer.currentTime;
+                indicatorB.textContent = `Klatka B: ${formatTime(timeB)}`;
+            }
+
+            renderComparison();
+        }
+
+        btnCaptureA.addEventListener('click', () => captureFrame('A'));
+        btnCaptureB.addEventListener('click', () => captureFrame('B'));
+
+        // Obsługa Tabów Trybów
+        modeTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                modeTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                activeMode = tab.dataset.mode;
+                updateModeUI();
+                renderComparison();
+            });
+        });
+
+        function updateModeUI() {
+            curtainHandle.style.display = (activeMode === 'split') ? 'block' : 'none';
+            opacitySliderGroup.style.display = (activeMode === 'blend') ? 'flex' : 'none';
+            btnToggleAB.style.display = (activeMode === 'toggle') ? 'block' : 'none';
+        }
+
+        btnToggleAB.addEventListener('click', () => {
+            activeToggleFrame = (activeToggleFrame === 'A') ? 'B' : 'A';
+            renderComparison();
+        });
+
+        opacitySlider.addEventListener('input', renderComparison);
+
+        // Obsługa Pełnego Ekranu (Fullscreen)
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                if (canvasContainer.requestFullscreen) {
+                    canvasContainer.requestFullscreen();
+                } else if (canvasContainer.webkitRequestFullscreen) {
+                    canvasContainer.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+        fullscreenExitBtn.addEventListener('click', toggleFullscreen);
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenExitBtn.style.display = 'block';
+            } else {
+                fullscreenExitBtn.style.display = 'none';
+            }
+            setTimeout(resizeCanvas, 50);
+        });
+
+        // ----------------------------------------------------
+        // LOGIKA KALIBRACJI / DOPASOWANIA AFINICZNEGO KLATEK
+        // ----------------------------------------------------
+        btnToggleCalibration.addEventListener('click', toggleCalibrationMode);
+        chkEnableAlignment.addEventListener('change', renderComparison);
+        btnClearPoints.addEventListener('click', () => {
+            calibrationPairs = [];
+            pendingPointA = null;
+            updateCalibrationUI();
+            renderComparison();
+        });
+
+        function toggleCalibrationMode() {
+            isCalibrationActive = !isCalibrationActive;
+            pendingPointA = null;
+            if (isCalibrationActive) {
+                btnToggleCalibration.classList.add('btn-active-toggle');
+                canvasContainer.classList.add('calibration-mode');
+                calibrationBanner.style.display = 'block';
+                updateCalibrationBannerText();
+            } else {
+                btnToggleCalibration.classList.remove('btn-active-toggle');
+                canvasContainer.classList.remove('calibration-mode');
+                calibrationBanner.style.display = 'none';
+            }
+            renderComparison();
+        }
+
+        function updateCalibrationBannerText() {
+            const nextIdx = calibrationPairs.length + 1;
+            if (!pendingPointA) {
+                if (activeMode === 'toggle' && activeToggleFrame !== 'A') {
+                    activeToggleFrame = 'A';
+                    renderComparison();
+                }
+                calibrationBanner.textContent = `🎯 KROK 1: Kliknij Punkt #${nextIdx} na Klatce A (Środkowy/Prawy klawisz = przesuwanie obrazu)`;
+            } else {
+                if (activeMode === 'toggle' && activeToggleFrame !== 'B') {
+                    activeToggleFrame = 'B';
+                    renderComparison();
+                }
+                calibrationBanner.textContent = `🎯 KROK 2: Kliknij ten sam Punkt #${nextIdx} na Klatce B (Środkowy/Prawy klawisz = przesuwanie obrazu)`;
+            }
+        }
+
+        function addCalibrationClick(normX, normY) {
+            if (!pendingPointA) {
+                pendingPointA = { ax: normX, ay: normY };
+                updateCalibrationBannerText();
+            } else {
+                calibrationPairs.push({
+                    ax: pendingPointA.ax,
+                    ay: pendingPointA.ay,
+                    bx: normX,
+                    by: normY
+                });
+                pendingPointA = null;
+                updateCalibrationBannerText();
+                updateCalibrationUI();
+            }
+            renderComparison();
+        }
+
+        function removeCalibrationPair(index) {
+            calibrationPairs.splice(index, 1);
+            if (pendingPointA) pendingPointA = null;
+            updateCalibrationBannerText();
+            updateCalibrationUI();
+            renderComparison();
+        }
+
+        function updateCalibrationUI() {
+            // Aktualizacja Badge Statusu
+            if (calibrationPairs.length === 0) {
+                alignStatusBadge.textContent = 'Kalibracja: Wyłączona (0 punktów)';
+                alignStatusBadge.className = 'badge badge-purple';
+            } else if (calibrationPairs.length === 1) {
+                alignStatusBadge.textContent = 'Kalibracja: Translacja (1 punkt)';
+                alignStatusBadge.className = 'badge badge-green';
+            } else if (calibrationPairs.length === 2) {
+                alignStatusBadge.textContent = 'Kalibracja: Obrót i Skala (2 punkty)';
+                alignStatusBadge.className = 'badge badge-green';
+            } else {
+                alignStatusBadge.textContent = `Kalibracja: Afinicja (${calibrationPairs.length} punktów)`;
+                alignStatusBadge.className = 'badge badge-green';
+            }
+
+            // Lista Punktów
+            if (calibrationPairs.length === 0) {
+                pointsListContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 6px;">Brak punktów kalibracyjnych. Kliknij "Tryb Stawiania Punktów", aby wyrównać przesunięcie kamery.</div>`;
+                return;
+            }
+
+            const w = compCanvas.width || 1920;
+            const h = compCanvas.height || 1080;
+
+            let html = '';
+            calibrationPairs.forEach((p, idx) => {
+                const dxPx = Math.round((p.ax - p.bx) * w);
+                const dyPx = Math.round((p.ay - p.by) * h);
+                html += `
+                    <div class="point-row">
+                        <div>
+                            <strong>#${idx + 1}</strong> 
+                            <span class="point-tag tag-a">A: (${Math.round(p.ax*100)}%, ${Math.round(p.ay*100)}%)</span> 
+                            ↔ 
+                            <span class="point-tag tag-b">B: (${Math.round(p.bx*100)}%, ${Math.round(p.by*100)}%)</span>
+                            <span style="color: var(--text-muted); margin-left: 8px;">Offset: (${dxPx >= 0 ? '+' : ''}${dxPx}px, ${dyPx >= 0 ? '+' : ''}${dyPx}px)</span>
+                        </div>
+                        <button class="btn-del-point" onclick="removeCalibrationPair(${idx})">✖</button>
+                    </div>
+                `;
+            });
+            pointsListContainer.innerHTML = html;
+        }
+
+        // Obliczanie macierzy dopasowania afinicznego (Least-Squares Affine Alignment Matrix)
+        function computeAlignmentMatrix(pairs, width, height) {
+            if (!chkEnableAlignment.checked || pairs.length === 0) {
+                return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+            }
+
+            // 1 Punkt: Czysta Translacja (Shift)
+            if (pairs.length === 1) {
+                const p = pairs[0];
+                const dx = (p.ax - p.bx) * width;
+                const dy = (p.ay - p.by) * height;
+                return { a: 1, b: 0, c: 0, d: 1, e: dx, f: dy };
+            }
+
+            // 2 Punkty: Skala + Obrót + Translacja (Similarity Transform)
+            if (pairs.length === 2) {
+                const p1 = pairs[0], p2 = pairs[1];
+                const bx1 = p1.bx * width, by1 = p1.by * height;
+                const ax1 = p1.ax * width, ay1 = p1.ay * height;
+                const bx2 = p2.bx * width, by2 = p2.by * height;
+                const ax2 = p2.ax * width, ay2 = p2.ay * height;
+
+                const dbx = bx2 - bx1, dby = by2 - by1;
+                const dax = ax2 - ax1, day = ay2 - ay1;
+                const denom = dbx * dbx + dby * dby;
+
+                if (Math.abs(denom) < 1e-6) {
+                    return { a: 1, b: 0, c: 0, d: 1, e: ax1 - bx1, f: ay1 - by1 };
+                }
+
+                const s_cos = (dax * dbx + day * dby) / denom;
+                const s_sin = (day * dbx - dax * dby) / denom;
+
+                const e = ax1 - (s_cos * bx1 - s_sin * by1);
+                const f = ay1 - (s_sin * bx1 + s_cos * by1);
+
+                return { a: s_cos, b: s_sin, c: -s_sin, d: s_cos, e: e, f: f };
+            }
+
+            // 3+ Punkty: Dopasowanie Afiniczne Metodą Najmniejszych Kwadratów (Least-Squares Affine Matrix)
+            let SumBx2 = 0, SumBy2 = 0, SumBxBy = 0, SumBx = 0, SumBy = 0, N = pairs.length;
+            let SumAxBx = 0, SumAxBy = 0, SumAx = 0;
+            let SumAyBx = 0, SumAyBy = 0, SumAy = 0;
+
+            for (let p of pairs) {
+                const bx = p.bx * width, by = p.by * height;
+                const ax = p.ax * width, ay = p.ay * height;
+
+                SumBx2 += bx * bx;
+                SumBy2 += by * by;
+                SumBxBy += bx * by;
+                SumBx += bx;
+                SumBy += by;
+
+                SumAxBx += ax * bx;
+                SumAxBy += ax * by;
+                SumAx += ax;
+
+                SumAyBx += ay * bx;
+                SumAyBy += ay * by;
+                SumAy += ay;
+            }
+
+            const detM = SumBx2 * (SumBy2 * N - SumBy * SumBy) 
+                       - SumBxBy * (SumBxBy * N - SumBy * SumBx) 
+                       + SumBx * (SumBxBy * SumBy - SumBy2 * SumBx);
+
+            if (Math.abs(detM) < 1e-6) {
+                const dx = (SumAx - SumBx) / N;
+                const dy = (SumAy - SumBy) / N;
+                return { a: 1, b: 0, c: 0, d: 1, e: dx, f: dy };
+            }
+
+            const invM = [
+                [ (SumBy2 * N - SumBy * SumBy) / detM, -(SumBxBy * N - SumBy * SumBx) / detM,  (SumBxBy * SumBy - SumBy2 * SumBx) / detM ],
+                [ -(SumBxBy * N - SumBy * SumBx) / detM, (SumBx2 * N - SumBx * SumBx) / detM, -(SumBx2 * SumBy - SumBxBy * SumBx) / detM ],
+                [ (SumBxBy * SumBy - SumBy2 * SumBx) / detM, -(SumBx2 * SumBy - SumBxBy * SumBx) / detM, (SumBx2 * SumBy2 - SumBxBy * SumBxBy) / detM ]
+            ];
+
+            const a = invM[0][0] * SumAxBx + invM[0][1] * SumAxBy + invM[0][2] * SumAx;
+            const c = invM[1][0] * SumAxBx + invM[1][1] * SumAxBy + invM[1][2] * SumAx;
+            const e = invM[2][0] * SumAxBx + invM[2][1] * SumAxBy + invM[2][2] * SumAx;
+
+            const b = invM[0][0] * SumAyBx + invM[0][1] * SumAyBy + invM[0][2] * SumAy;
+            const d = invM[1][0] * SumAyBx + invM[1][1] * SumAyBy + invM[1][2] * SumAy;
+            const f = invM[2][0] * SumAyBx + invM[2][1] * SumAyBy + invM[2][2] * SumAy;
+
+            return { a, b, c, d, e, f };
+        }
+
+        // Skróty Klawiszowe
+        window.addEventListener('keydown', (e) => {
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+            if (e.key.toLowerCase() === 'a') {
+                captureFrame('A');
+            } else if (e.key.toLowerCase() === 'b') {
+                captureFrame('B');
+            } else if (e.key.toLowerCase() === 'c') {
+                toggleCalibrationMode();
+            } else if (e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                toggleFullscreen();
+            } else if (e.code === 'Space' || e.key === 'Tab') {
+                e.preventDefault();
+                activeToggleFrame = (activeToggleFrame === 'A') ? 'B' : 'A';
+                renderComparison();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                stepTime(e.shiftKey ? -1 : -FRAME_TIME);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                stepTime(e.shiftKey ? 1 : FRAME_TIME);
+            }
+        });
+
+        // Dostosowanie Rozmiaru Canvasa
+        function resizeCanvas() {
+            const rect = canvasContainer.getBoundingClientRect();
+            compCanvas.width = rect.width;
+            compCanvas.height = rect.height;
+            renderComparison();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Renderowanie Porównania i Nakładek Kalibracji
+        function renderComparison() {
+            ctx.clearRect(0, 0, compCanvas.width, compCanvas.height);
+
+            const w = compCanvas.width;
+            const h = compCanvas.height;
+
+            if (!frameA && !frameB) {
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '16px Outfit';
+                ctx.textAlign = 'center';
+                ctx.fillText('Wybierz wideo i zapisz Klatkę A oraz Klatkę B do porównania', w / 2, h / 2);
+                return;
+            }
+
+            // Pomocnicza funkcja do nakładania transformacji Zoom & Pan
+            function applyZoomTransform(context) {
+                context.translate(w / 2 + panX, h / 2 + panY);
+                context.scale(zoomScale, zoomScale);
+                context.translate(-w / 2, -h / 2);
+            }
+
+            // Obliczenie macierzy wyrównania dla Klatki B
+            const alignM = computeAlignmentMatrix(calibrationPairs, w, h);
+
+            function applyFrameBAlignment(context) {
+                context.transform(alignM.a, alignM.b, alignM.c, alignM.d, alignM.e, alignM.f);
+            }
+
+            if (activeMode === 'toggle') {
+                ctx.save();
+                applyZoomTransform(ctx);
+                if (activeToggleFrame === 'A') {
+                    if (frameA) ctx.drawImage(frameA, 0, 0, w, h);
+                } else {
+                    if (frameB) {
+                        ctx.save();
+                        applyFrameBAlignment(ctx);
+                        ctx.drawImage(frameB, 0, 0, w, h);
+                        ctx.restore();
+                    }
+                }
+                ctx.restore();
+            } else if (activeMode === 'split') {
+                const splitX = w * splitRatio;
+                curtainHandle.style.left = `${splitX}px`;
+
+                // Klatka A po lewej
+                if (frameA) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.rect(0, 0, splitX, h);
+                    ctx.clip();
+
+                    applyZoomTransform(ctx);
+                    ctx.drawImage(frameA, 0, 0, w, h);
+                    ctx.restore();
+                }
+
+                // Klatka B po prawej z wyrównaniem
+                if (frameB) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.rect(splitX, 0, w - splitX, h);
+                    ctx.clip();
+
+                    applyZoomTransform(ctx);
+                    applyFrameBAlignment(ctx);
+                    ctx.drawImage(frameB, 0, 0, w, h);
+                    ctx.restore();
+                }
+            } else if (activeMode === 'blend') {
+                ctx.save();
+                applyZoomTransform(ctx);
+                if (frameA) {
+                    ctx.drawImage(frameA, 0, 0, w, h);
+                }
+                if (frameB) {
+                    ctx.save();
+                    ctx.globalAlpha = parseFloat(opacitySlider.value);
+                    applyFrameBAlignment(ctx);
+                    ctx.drawImage(frameB, 0, 0, w, h);
+                    ctx.restore();
+                }
+                ctx.restore();
+            } else if (activeMode === 'side') {
+                ctx.save();
+                applyZoomTransform(ctx);
+                const halfW = w / 2;
+                if (frameA) {
+                    ctx.drawImage(frameA, 0, 0, halfW, h);
+                }
+                if (frameB) {
+                    ctx.save();
+                    ctx.translate(halfW, 0);
+                    applyFrameBAlignment(ctx);
+                    ctx.drawImage(frameB, 0, 0, halfW, h);
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+
+            // Rysowanie znaczników kalibracyjnych (Punkty Kontrolne A i B) - TYLKO W TRYBIE EDYCJI
+            if (isCalibrationActive) {
+                renderCalibrationPointsOnCanvas(w, h);
+            }
+
+            updateZoomInfo();
+        }
+
+        // Rysowanie tarcz i linii punktów kontrolnych na Canvasie
+        function renderCalibrationPointsOnCanvas(w, h) {
+            ctx.save();
+            ctx.translate(w / 2 + panX, h / 2 + panY);
+            ctx.scale(zoomScale, zoomScale);
+            ctx.translate(-w / 2, -h / 2);
+
+            calibrationPairs.forEach((p, idx) => {
+                const ax = p.ax * w;
+                const ay = p.ay * h;
+                const bx = p.bx * w;
+                const by = p.by * h;
+
+                // Linia łącząca przesunięcie A -> B
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineWidth = 1.5 / zoomScale;
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(bx, by);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Punkt A (Zielony)
+                drawMarker(ax, ay, `#${idx + 1} A`, '#10b981');
+
+                // Punkt B (Złoty/Bursztynowy)
+                drawMarker(bx, by, `#${idx + 1} B`, '#f59e0b');
+            });
+
+            // Tymczasowy punkt A oczekujący na kliknięcie B
+            if (pendingPointA) {
+                const ax = pendingPointA.ax * w;
+                const ay = pendingPointA.ay * h;
+                drawMarker(ax, ay, `#${calibrationPairs.length + 1} A (Wyznacz B...)`, '#c084fc');
+            }
+
+            ctx.restore();
+        }
+
+        function drawMarker(x, y, label, color) {
+            const r = 8 / zoomScale;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.lineWidth = 2 / zoomScale;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            // Celownik
+            ctx.beginPath();
+            ctx.moveTo(x - r * 1.5, y); ctx.lineTo(x + r * 1.5, y);
+            ctx.moveTo(x, y - r * 1.5); ctx.lineTo(x, y + r * 1.5);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+
+            // Etykieta
+            ctx.font = `${Math.max(10, 12 / zoomScale)}px JetBrains Mono`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = 4;
+            ctx.fillText(label, x + r + 4, y + 4);
+            ctx.shadowBlur = 0;
+        }
+
+        // Zapobieganie otwieraniu menu kontekstowego przy prawym przycisku na canvasie
+        canvasContainer.addEventListener('contextmenu', (e) => {
+            if (isCalibrationActive || e.button === 2) {
+                e.preventDefault();
+            }
+        });
+
+        // Obsługa kliknięć na Canvas w Trybie Kalibracji (Pkt stawiany TYLKO lewym przyciskiem myszy)
+        canvasContainer.addEventListener('click', (e) => {
+            if (!isCalibrationActive) return;
+            if (e.target === curtainHandle || curtainHandle.contains(e.target) || e.target === fullscreenExitBtn) return;
+            
+            // Punkt stawiany TYLKO lewym przyciskiem myszy (button === 0) i tylko jeśli nie przesuwano kadru (hasPanned === false)
+            if (e.button !== 0 || hasPanned) return;
+
+            const rect = canvasContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const w = compCanvas.width;
+            const h = compCanvas.height;
+
+            // Odwrócenie transformacji Zoom & Pan
+            const imgX = (mouseX - (w / 2 + panX)) / zoomScale + w / 2;
+            const imgY = (mouseY - (h / 2 + panY)) / zoomScale + h / 2;
+
+            const normX = Math.max(0, Math.min(1, imgX / w));
+            const normY = Math.max(0, Math.min(1, imgY / h));
+
+            addCalibrationClick(normX, normY);
+        });
+
+        // Obsługa Przeciągania Kurtyny (Curtain Handle)
+        curtainHandle.addEventListener('mousedown', (e) => {
+            isDraggingCurtain = true;
+            e.stopPropagation();
+        });
+
+        // Panowanie Obrazu (Mysz: Środkowy przycisk, Prawy przycisk lub Lewy w trybie nie-kalibracyjnym)
+        canvasContainer.addEventListener('mousedown', (e) => {
+            if (e.target === curtainHandle || curtainHandle.contains(e.target) || e.target === fullscreenExitBtn) return;
+
+            // Zawsze resetuj flagę przesuwania obrazu przy nowym naciśnięciu dowolnego przycisku myszy
+            hasPanned = false;
+            panStartX = e.clientX;
+            panStartY = e.clientY;
+
+            if (e.button === 1 || e.button === 2 || !isCalibrationActive) {
+                isPanning = true;
+                startPanX = e.clientX - panX;
+                startPanY = e.clientY - panY;
+                if (e.button === 1 || e.button === 2) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDraggingCurtain) {
+                const rect = canvasContainer.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                x = Math.max(0, Math.min(rect.width, x));
+                splitRatio = x / rect.width;
+                renderComparison();
+            } else if (isPanning) {
+                const dist = Math.hypot(e.clientX - panStartX, e.clientY - panStartY);
+                if (dist > 4) {
+                    hasPanned = true;
+                }
+                panX = e.clientX - startPanX;
+                panY = e.clientY - startPanY;
+                renderComparison();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingCurtain = false;
+            isPanning = false;
+        });
+
+        // Powiększanie w punkcie kursora (Zoom at Cursor)
+        canvasContainer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = canvasContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const zoomFactor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+            const oldScale = zoomScale;
+            let newScale = Math.max(0.8, Math.min(10.0, zoomScale * zoomFactor));
+
+            const w = compCanvas.width;
+            const h = compCanvas.height;
+            const cx = mouseX - w / 2;
+            const cy = mouseY - h / 2;
+
+            panX = cx - (cx - panX) * (newScale / oldScale);
+            panY = cy - (cy - panY) * (newScale / oldScale);
+            zoomScale = newScale;
+
+            renderComparison();
+        }, { passive: false });
+
+        btnResetZoom.addEventListener('click', () => {
+            zoomScale = 1.0;
+            panX = 0;
+            panY = 0;
+            renderComparison();
+        });
+
+        function updateZoomInfo() {
+            zoomInfo.textContent = `Powiększenie: ${Math.round(zoomScale * 100)}% | Pozycja: (${Math.round(panX)}, ${Math.round(panY)})`;
+        }
+
+        // Pobieranie Zrzutu Ekranu z Porównaniem
+        btnExportImage.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `porownanie_${Date.now()}.png`;
+            link.href = compCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // Inicjalizacja widoku
+        updateModeUI();
+        updateCalibrationUI();
+        resizeCanvas();
+    </script>
+</body>
+</html>

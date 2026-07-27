@@ -2,7 +2,7 @@
 $SourcePath  = "C:\BlueIris_timelapse\JPEG"   # Zrodlo zdjec
 $StoragePath = "C:\BlueIris_timelapse\VIDEO"  # Tu tworzymy filmy (Lokalnie)
 $LogPath     = "C:\BlueIris_timelapse\LOGS"   # Logi
-$Quality     = 19                             # Jakosc
+$Quality     = 14                             # Jakosc (14 = super jakosc, visually lossless)
 $FPS         = 30                             # Predkosc
 
 # KONFIGURACJA RCLONE
@@ -251,7 +251,7 @@ foreach ($folder in $folders) {
             $tempNewPath = "$StoragePath\$CameraName\Temp_New_Week_$($type.Name).mp4"
             $tempMergePath = "$StoragePath\$CameraName\Temp_Merge_Week_$($type.Name).mp4"
             
-            $argsGen = "-y -r $FPS -f concat -safe 0 -i `"$listPath`" -c:v h264_nvenc -preset p6 -rc:v vbr_hq -cq:v $Quality -b:v 0 -pix_fmt yuv420p `"$tempNewPath`""
+            $argsGen = "-y -r $FPS -f concat -safe 0 -i `"$listPath`" -c:v h264_nvenc -preset p7 -rc:v vbr_hq -cq:v $Quality -b:v 0 -g 15 -pix_fmt yuv420p `"$tempNewPath`""
             $procGen = Start-Process -FilePath $ffmpegPath -ArgumentList $argsGen -WorkingDirectory $folder.FullName -NoNewWindow -Wait -PassThru -RedirectStandardOutput $LogOut -RedirectStandardError $LogErr
             
             if ($procGen.ExitCode -eq 0 -and (Test-Path $tempNewPath)) {
@@ -281,7 +281,7 @@ foreach ($folder in $folders) {
         } else {
             # Plik tygodniowy nie istnieje - tworzymy nowy
             Write-Host "   [WIDEO] Generowanie nowego wideo tygodniowego $($type.Name)..." -NoNewline
-            $argsGen = "-y -r $FPS -f concat -safe 0 -i `"$listPath`" -c:v h264_nvenc -preset p6 -rc:v vbr_hq -cq:v $Quality -b:v 0 -pix_fmt yuv420p `"$weeklyPath`""
+            $argsGen = "-y -r $FPS -f concat -safe 0 -i `"$listPath`" -c:v h264_nvenc -preset p7 -rc:v vbr_hq -cq:v $Quality -b:v 0 -g 15 -pix_fmt yuv420p `"$weeklyPath`""
             $procGen = Start-Process -FilePath $ffmpegPath -ArgumentList $argsGen -WorkingDirectory $folder.FullName -NoNewWindow -Wait -PassThru -RedirectStandardOutput $LogOut -RedirectStandardError $LogErr
             
             if ($procGen.ExitCode -eq 0 -and (Test-Path $weeklyPath) -and (Get-Item $weeklyPath).Length -gt 1000) {

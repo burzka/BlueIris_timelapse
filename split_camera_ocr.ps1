@@ -337,10 +337,10 @@ Write-Host "   Zapisano metadane klatek do: $metadataFile" -ForegroundColor Gree
 Write-Host "KROK 4: Generowanie wideo za pomoca FFmpeg..." -ForegroundColor Cyan
 
 Write-Host "   Generuje klip dzienny ($outDay)..." -ForegroundColor Gray
-& $ffmpegExe -y -i $videoPath -filter_script:v $dayFilterFile -c:v h264_nvenc -preset p6 -cq:v 19 -an $outDay 2>&1 | Out-Null
+& $ffmpegExe -y -i $videoPath -filter_script:v $dayFilterFile -c:v h264_nvenc -preset p7 -cq:v 14 -g 15 -pix_fmt yuv420p -an $outDay 2>&1 | Out-Null
 
 Write-Host "   Generuje klip nocny ($outNight)..." -ForegroundColor Gray
-& $ffmpegExe -y -i $videoPath -filter_script:v $nightFilterFile -c:v h264_nvenc -preset p6 -cq:v 19 -an $outNight 2>&1 | Out-Null
+& $ffmpegExe -y -i $videoPath -filter_script:v $nightFilterFile -c:v h264_nvenc -preset p7 -cq:v 14 -g 15 -pix_fmt yuv420p -an $outNight 2>&1 | Out-Null
 
 # 5. Clean up
 Write-Host "KROK 5: Sprzatanie plikow tymczasowych..." -ForegroundColor Cyan

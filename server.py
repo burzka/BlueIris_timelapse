@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import glob
 import json
@@ -156,6 +156,9 @@ import threading
 class TimelapseHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass # Ciche logowanie dla wydajności strumieniowania
+
+    def do_HEAD(self):
+        self.do_GET()
 
     def do_OPTIONS(self):
         self.send_response(200)

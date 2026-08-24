@@ -121,6 +121,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
+            margin-bottom: 25px;
         }
 
         .card-header {
@@ -151,15 +152,16 @@
         .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
         .badge-purple { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); }
         .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
 
         .btn {
             background: var(--accent);
             color: #ffffff;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 10px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -183,6 +185,10 @@
 
         .btn-purple {
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
         }
 
         .btn-secondary {
@@ -232,7 +238,7 @@
         }
 
         .meta-val {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #fff;
             font-family: 'JetBrains Mono', monospace;
@@ -241,11 +247,11 @@
 
         .actions-bar {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        /* Lista plików */
+        /* Tabela */
         .file-table {
             width: 100%;
             border-collapse: collapse;
@@ -270,7 +276,7 @@
             background: var(--bg-card-hover);
         }
 
-        /* Logi i status rclone */
+        /* Terminal */
         .logs-terminal {
             background: #050811;
             border: 1px solid #1a243b;
@@ -327,7 +333,7 @@
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    <span>🎬 Najnowszy Film Timelapse</span>
+                    <span>🎬 Najnowszy Film Główny</span>
                     <span class="badge badge-green" id="latestBadge">NAJNOWSZY</span>
                 </div>
                 <div id="latestTimeBadge" style="font-size: 0.85rem; color: var(--text-muted);">-</div>
@@ -368,56 +374,93 @@
             </div>
         </div>
 
-        <!-- KARTA 2: DYSK GOOGLE & SYNCHRONIZACJA -->
+        <!-- KARTA 2: DYSK GOOGLE & SYNCHRONIZACJA GŁÓWNYCH PLIKÓW -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    <span>☁️ Integracja z Dyskiem Google</span>
+                    <span>☁️ Dysk Google (DAY, NIGHT, FULL)</span>
                 </div>
                 <div id="rcloneStatusIndicator">
                     <span class="status-dot dot-green"></span>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">Rclone Gotowy</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Połączono z Google Drive</span>
                 </div>
             </div>
 
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">
-                Pobieraj automatycznie najświeższe filmy z chmury lub synchronizuj całe archiwa wideo z kamer.
+                Aktualizuj pełne pliki zbiorcze (<strong>DAY</strong>, <strong>NIGHT</strong>, <strong>FULL</strong>) dla 5 kamer z pominięciem archiwów tygodniowych.
             </p>
 
             <div class="actions-bar" style="margin-bottom: 20px;">
-                <button id="btnDownloadLatest" class="btn">
-                    📥 Pobierz Najnowszy z Dysku
+                <button id="btnDownloadLatest" class="btn btn-green">
+                    📥 Pobierz Najnowszy Główny
                 </button>
-                <button id="btnSyncAll" class="btn btn-secondary">
-                    🔄 Pełna Synchronizacja (Wszystko)
+                <button id="btnSyncMain" class="btn">
+                    🔄 Aktualizuj Wszystkie Główne (DAY/NIGHT/FULL)
                 </button>
-                <button id="btnRefreshList" class="btn btn-secondary">
-                    🔃 Odśwież Listę
+                <button id="btnCancelTask" class="btn btn-danger" style="display: none;">
+                    ⛔ Przerwij Zadanie
+                </button>
+                <button id="btnRefreshAll" class="btn btn-secondary">
+                    🔃 Odśwież
                 </button>
             </div>
 
             <div class="meta-box" style="margin-bottom: 10px;">
-                <div class="meta-label">Status Zadania</div>
+                <div class="meta-label">Status Zadania Rclone</div>
                 <div class="meta-val" id="taskStatusText" style="font-size: 0.9rem; color: #38bdf8;">Gotowy</div>
             </div>
 
             <div class="logs-terminal" id="logsTerminal">
                 <p class="ok">[SYSTEM] Połączono z serwerem BlueIris Timelapse Hub.</p>
-                <p>[INFO] Gotowy do operacji na plikach wideo.</p>
+                <p>[INFO] Gotowy do operacji na plikach głównych.</p>
             </div>
         </div>
 
     </div>
 
-    <!-- KARTA 3: LISTA WSZYSTKICH LOKALNYCH FILMÓW -->
+    <!-- KARTA 3: PLIKI GŁÓWNE W CHMURZE (Google Drive) -->
     <div class="card">
         <div class="card-header">
             <div class="card-title">
-                <span>📁 Wszystkie Dostępne Filmy Wideo (Lokalne)</span>
+                <span>☁️ Pliki Główne Dostępne na Dysku Google (DAY / NIGHT / FULL)</span>
+                <span class="badge badge-purple" id="cloudCountBadge">Wczytywanie...</span>
+            </div>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="fetchCloudFiles()">
+                🔃 Odśwież Chmurę
+            </button>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th>Nazwa Pliku w Chmurze</th>
+                        <th>Kamera</th>
+                        <th>Typ</th>
+                        <th>Rozmiar</th>
+                        <th>Data w Chmurze</th>
+                        <th>Stan Lokalny</th>
+                        <th style="text-align: right;">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody id="cloudTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Wczytywanie listy z Google Drive...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- KARTA 4: LISTA WSZYSTKICH LOKALNYCH FILMÓW -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📁 Lokalne Filmy Gotowe do Odtworzenia i Porównania</span>
                 <span class="badge badge-blue" id="videoCountBadge">0 filmów</span>
             </div>
             <div>
-                <input type="text" id="videoSearchInput" placeholder="Szukaj kamery / pliku..." 
+                <input type="text" id="videoSearchInput" placeholder="Filtruj kamerę / plik..." 
                        style="background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 6px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85rem;">
             </div>
         </div>
@@ -430,14 +473,14 @@
                         <th>Kamera</th>
                         <th>Typ</th>
                         <th>Rozmiar</th>
-                        <th>Data Utworzenia / Modyfikacji</th>
+                        <th>Data Modyfikacji</th>
                         <th>Metadane</th>
-                        <th style="text-align: right;">Akcje</th>
+                        <th style="text-align: right;">Odtwarzanie & Analiza</th>
                     </tr>
                 </thead>
                 <tbody id="videoTableBody">
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Ładowanie listy filmów...</td>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Ładowanie listy lokalnej...</td>
                     </tr>
                 </tbody>
             </table>
@@ -446,7 +489,9 @@
 
     <script>
         let allVideos = [];
+        let cloudFiles = [];
         let latestVideo = null;
+        let isTaskRunning = false;
 
         async function fetchVideos() {
             try {
@@ -454,8 +499,26 @@
                 const data = await res.json();
                 allVideos = data.videos || [];
                 renderVideos();
+                renderCloudFiles();
             } catch (err) {
                 console.error("Błąd pobierania filmów:", err);
+            }
+        }
+
+        async function fetchCloudFiles() {
+            const tableBody = document.getElementById('cloudTableBody');
+            tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Pobieranie listy z Dysku Google...</td></tr>`;
+            try {
+                const res = await fetch('/api/gdrive/cloud-files');
+                const data = await res.json();
+                if (data.success) {
+                    cloudFiles = data.files || [];
+                    renderCloudFiles();
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #f87171; padding: 20px;">Błąd: ${data.error}</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -465,12 +528,15 @@
                 const data = await res.json();
                 const task = data.task;
                 if (task) {
+                    isTaskRunning = (task.status === 'running');
+                    document.getElementById('btnCancelTask').style.display = isTaskRunning ? 'inline-flex' : 'none';
                     document.getElementById('taskStatusText').textContent = `${task.progress_message || task.status}`;
+                    
                     if (task.logs && task.logs.length > 0) {
                         const term = document.getElementById('logsTerminal');
                         term.innerHTML = task.logs.map(l => {
                             if (l.includes("BŁĄD") || l.includes("Error")) return `<p class="err">${l}</p>`;
-                            if (l.includes("pomyślnie") || l.includes("sukcesem")) return `<p class="ok">${l}</p>`;
+                            if (l.includes("SUKCES") || l.includes("sukcesem") || l.includes("pomyślnie")) return `<p class="ok">${l}</p>`;
                             return `<p>${l}</p>`;
                         }).join('');
                         term.scrollTop = term.scrollHeight;
@@ -481,6 +547,50 @@
             }
         }
 
+        function renderCloudFiles() {
+            const tableBody = document.getElementById('cloudTableBody');
+            const videoOnly = cloudFiles.filter(f => f.is_video);
+            document.getElementById('cloudCountBadge').textContent = `${videoOnly.length} plików`;
+
+            if (videoOnly.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Brak plików w chmurze lub trwa wczytywanie...</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            videoOnly.forEach(f => {
+                let badgeClass = 'badge-blue';
+                if (f.type === 'DAY') badgeClass = 'badge-green';
+                if (f.type === 'NIGHT') badgeClass = 'badge-purple';
+                if (f.type === 'FULL') badgeClass = 'badge-amber';
+
+                const localMatch = allVideos.find(v => v.filename === f.name);
+                let localStatusHtml = `<span style="color: var(--text-dim);">Brak lokalnie</span>`;
+                if (localMatch) {
+                    localStatusHtml = `<span class="badge badge-green">✓ Pobrany (${localMatch.size_formatted})</span>`;
+                }
+
+                const mtimeFormatted = f.mtime ? new Date(f.mtime).toLocaleString('pl-PL') : '-';
+
+                html += `
+                    <tr>
+                        <td><strong style="color: #fff;">${f.name}</strong></td>
+                        <td><span class="badge badge-blue">${f.camera}</span></td>
+                        <td><span class="badge ${badgeClass}">${f.type}</span></td>
+                        <td style="font-family: 'JetBrains Mono', monospace;">${f.size_formatted}</td>
+                        <td style="color: var(--text-muted);">${mtimeFormatted}</td>
+                        <td>${localStatusHtml}</td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="downloadSingleFile('${f.path}', '${f.name}')">
+                                📥 ${localMatch ? 'Aktualizuj' : 'Pobierz'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
         function renderVideos() {
             const tableBody = document.getElementById('videoTableBody');
             const search = document.getElementById('videoSearchInput').value.toLowerCase();
@@ -489,11 +599,10 @@
             const filtered = allVideos.filter(v => v.filename.toLowerCase().includes(search) || v.camera.toLowerCase().includes(search));
 
             if (filtered.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Brak plików spełniających kryteria.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Brak pobranych plików wideo. Kliknij 'Pobierz Najnowszy Główny' powyżej.</td></tr>`;
                 return;
             }
 
-            // Ustaw najnowszy film
             if (allVideos.length > 0) {
                 latestVideo = allVideos[0];
                 document.getElementById('metaFilename').textContent = latestVideo.filename;
@@ -581,10 +690,27 @@
 
         document.getElementById('videoSearchInput').addEventListener('input', renderVideos);
 
-        // Akcje pobierania z Google Drive
+        // Pobieranie pojedynczego pliku
+        async function downloadSingleFile(cloudPath, filename) {
+            const term = document.getElementById('logsTerminal');
+            term.innerHTML += `<p>[INFO] Żądanie pobrania: ${filename}...</p>`;
+            try {
+                const res = await fetch('/api/gdrive/download-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: cloudPath, name: filename })
+                });
+                const data = await res.json();
+                term.innerHTML += `<p class="ok">[START] ${data.message}</p>`;
+                pollTaskStatus();
+            } catch (e) {
+                term.innerHTML += `<p class="err">[BŁĄD] ${e.message}</p>`;
+            }
+        }
+
         document.getElementById('btnDownloadLatest').addEventListener('click', async () => {
             const term = document.getElementById('logsTerminal');
-            term.innerHTML += `<p>[INFO] Wysyłanie żądania pobrania najnowszego filmu z Dysku Google...</p>`;
+            term.innerHTML += `<p>[INFO] Sprawdzanie najnowszego pliku głównego...</p>`;
             try {
                 const res = await fetch('/api/gdrive/download-latest', { method: 'POST' });
                 const data = await res.json();
@@ -595,12 +721,12 @@
             }
         });
 
-        document.getElementById('btnSyncAll').addEventListener('click', async () => {
-            if (!confirm("Czy chcesz rozpocząć synchronizację wszystkich plików wideo z Dyskiem Google?")) return;
+        document.getElementById('btnSyncMain').addEventListener('click', async () => {
+            if (!confirm("Czy chcesz zaktualizować pełne pliki DAY, NIGHT i FULL dla wszystkich 5 kamer?")) return;
             const term = document.getElementById('logsTerminal');
-            term.innerHTML += `<p>[INFO] Rozpoczynanie synchronizacji rclone...</p>`;
+            term.innerHTML += `<p>[INFO] Rozpoczynanie synchronizacji plików głównych...</p>`;
             try {
-                const res = await fetch('/api/gdrive/sync', { method: 'POST' });
+                const res = await fetch('/api/gdrive/sync-main', { method: 'POST' });
                 const data = await res.json();
                 term.innerHTML += `<p class="ok">[START] ${data.message}</p>`;
                 pollTaskStatus();
@@ -609,8 +735,18 @@
             }
         });
 
-        document.getElementById('btnRefreshList').addEventListener('click', () => {
+        document.getElementById('btnCancelTask').addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/gdrive/cancel', { method: 'POST' });
+                const data = await res.json();
+                document.getElementById('logsTerminal').innerHTML += `<p class="err">[STOP] ${data.message}</p>`;
+                checkGdriveStatus();
+            } catch (e) {}
+        });
+
+        document.getElementById('btnRefreshAll').addEventListener('click', () => {
             fetchVideos();
+            fetchCloudFiles();
             checkGdriveStatus();
         });
 
@@ -625,6 +761,7 @@
 
         // Start
         fetchVideos();
+        fetchCloudFiles();
         checkGdriveStatus();
     </script>
 </body>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
@@ -158,15 +158,15 @@
             background: var(--accent);
             color: #ffffff;
             border: none;
-            padding: 10px 18px;
-            border-radius: 10px;
+            padding: 8px 14px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.2s ease;
             text-decoration: none;
         }
@@ -251,29 +251,72 @@
             flex-wrap: wrap;
         }
 
-        /* Tabela */
-        .file-table {
+        /* Sekcje kamer i zintegrowana tabela */
+        .camera-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .camera-card-header {
+            background: rgba(26, 34, 52, 0.6);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .camera-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cam-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9rem;
-            margin-top: 10px;
         }
 
-        .file-table th {
+        .cam-table th {
             text-align: left;
-            padding: 10px 14px;
+            padding: 12px 18px;
             color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 14, 24, 0.4);
             font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .file-table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .cam-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: middle;
         }
 
-        .file-table tr:hover td {
-            background: var(--bg-card-hover);
+        .cam-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cam-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .status-sub {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         /* Terminal */
@@ -314,8 +357,8 @@
         <div class="logo-title">
             <div class="logo-icon">BI</div>
             <div>
-                <h1>BlueIris Timelapse Automation Hub</h1>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">Centrum analizy timelapse, porównywania klatek i synchronizacji Google Drive</p>
+                <h1>BlueIris Timelapse Hub</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Zintegrowany panel analizy i synchronizacji filmów z kamer</p>
             </div>
         </div>
 
@@ -329,11 +372,11 @@
 
     <div class="grid-layout">
         
-        <!-- KARTA 1: NAJNOWSZY FILM (Odtwarzacz & Szybka Analiza) -->
+        <!-- KARTA 1: AKTYWNY / NAJNOWSZY FILM -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    <span>🎬 Najnowszy Film Główny</span>
+                    <span>🎬 Podgląd Wideo & Narzędzia</span>
                     <span class="badge badge-green" id="latestBadge">NAJNOWSZY</span>
                 </div>
                 <div id="latestTimeBadge" style="font-size: 0.85rem; color: var(--text-muted);">-</div>
@@ -374,11 +417,11 @@
             </div>
         </div>
 
-        <!-- KARTA 2: DYSK GOOGLE & SYNCHRONIZACJA GŁÓWNYCH PLIKÓW -->
+        <!-- KARTA 2: DYSK GOOGLE & AKCJE ZBIORCZE -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    <span>☁️ Dysk Google (DAY, NIGHT, FULL)</span>
+                    <span>☁️ Synchronizacja z Dyskiem Google</span>
                 </div>
                 <div id="rcloneStatusIndicator">
                     <span class="status-dot dot-green"></span>
@@ -387,7 +430,7 @@
             </div>
 
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">
-                Aktualizuj pełne pliki zbiorcze (<strong>DAY</strong>, <strong>NIGHT</strong>, <strong>FULL</strong>) dla 5 kamer z pominięciem archiwów tygodniowych.
+                Pobieraj i aktualizuj pełne pliki zbiorcze (<strong>DAY</strong>, <strong>NIGHT</strong>, <strong>FULL</strong>) dla 5 kamer z pominięciem archiwów tygodniowych.
             </p>
 
             <div class="actions-bar" style="margin-bottom: 20px;">
@@ -395,13 +438,13 @@
                     📥 Pobierz Najnowszy Główny
                 </button>
                 <button id="btnSyncMain" class="btn">
-                    🔄 Aktualizuj Wszystkie Główne (DAY/NIGHT/FULL)
+                    🔄 Aktualizuj Wszystkie Kamery (DAY/NIGHT/FULL)
                 </button>
                 <button id="btnCancelTask" class="btn btn-danger" style="display: none;">
                     ⛔ Przerwij Zadanie
                 </button>
                 <button id="btnRefreshAll" class="btn btn-secondary">
-                    🔃 Odśwież
+                    🔃 Odśwież Status
                 </button>
             </div>
 
@@ -418,104 +461,46 @@
 
     </div>
 
-    <!-- KARTA 3: PLIKI GŁÓWNE W CHMURZE (Google Drive) -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <span>☁️ Pliki Główne Dostępne na Dysku Google (DAY / NIGHT / FULL)</span>
-                <span class="badge badge-purple" id="cloudCountBadge">Wczytywanie...</span>
-            </div>
-            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="fetchCloudFiles()">
-                🔃 Odśwież Chmurę
-            </button>
-        </div>
-
-        <div style="overflow-x: auto;">
-            <table class="file-table">
-                <thead>
-                    <tr>
-                        <th>Nazwa Pliku w Chmurze</th>
-                        <th>Kamera</th>
-                        <th>Typ</th>
-                        <th>Rozmiar</th>
-                        <th>Data w Chmurze</th>
-                        <th>Stan Lokalny</th>
-                        <th style="text-align: right;">Akcja</th>
-                    </tr>
-                </thead>
-                <tbody id="cloudTableBody">
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Wczytywanie listy z Google Drive...</td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- SEKCJA: ZINTEGROWANA TABELA Z PODZIAŁEM NA KAMERY -->
+    <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 1.4rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px;">
+            <span>📹 Kamery i Wersje Filmów (Chmura & Dysk Lokalny)</span>
+        </h2>
+        <div>
+            <input type="text" id="cameraFilterInput" placeholder="Filtruj kamerę..." 
+                   style="background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 10px; font-family: inherit; font-size: 0.9rem;">
         </div>
     </div>
 
-    <!-- KARTA 4: LISTA WSZYSTKICH LOKALNYCH FILMÓW -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <span>📁 Lokalne Filmy Gotowe do Odtworzenia i Porównania</span>
-                <span class="badge badge-blue" id="videoCountBadge">0 filmów</span>
-            </div>
-            <div>
-                <input type="text" id="videoSearchInput" placeholder="Filtruj kamerę / plik..." 
-                       style="background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 6px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85rem;">
-            </div>
-        </div>
-
-        <div style="overflow-x: auto;">
-            <table class="file-table">
-                <thead>
-                    <tr>
-                        <th>Nazwa Pliku</th>
-                        <th>Kamera</th>
-                        <th>Typ</th>
-                        <th>Rozmiar</th>
-                        <th>Data Modyfikacji</th>
-                        <th>Metadane</th>
-                        <th style="text-align: right;">Odtwarzanie & Analiza</th>
-                    </tr>
-                </thead>
-                <tbody id="videoTableBody">
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Ładowanie listy lokalnej...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <!-- KONTENER KART KAMER -->
+    <div id="camerasContainer">
+        <div style="text-align: center; color: var(--text-muted); padding: 40px;">Wczytywanie danych kamer i chmury...</div>
     </div>
 
     <script>
+        let camerasData = [];
         let allVideos = [];
-        let cloudFiles = [];
         let latestVideo = null;
         let isTaskRunning = false;
+
+        async function fetchCameras() {
+            try {
+                const res = await fetch('/api/cameras');
+                const data = await res.json();
+                camerasData = data.cameras || [];
+                renderCameras();
+            } catch (err) {
+                console.error("Błąd pobierania kamer:", err);
+            }
+        }
 
         async function fetchVideos() {
             try {
                 const res = await fetch('/api/videos');
                 const data = await res.json();
                 allVideos = data.videos || [];
-                renderVideos();
-                renderCloudFiles();
-            } catch (err) {
-                console.error("Błąd pobierania filmów:", err);
-            }
-        }
-
-        async function fetchCloudFiles() {
-            const tableBody = document.getElementById('cloudTableBody');
-            tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Pobieranie listy z Dysku Google...</td></tr>`;
-            try {
-                const res = await fetch('/api/gdrive/cloud-files');
-                const data = await res.json();
-                if (data.success) {
-                    cloudFiles = data.files || [];
-                    renderCloudFiles();
-                } else {
-                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #f87171; padding: 20px;">Błąd: ${data.error}</td></tr>`;
+                if (allVideos.length > 0 && !latestVideo) {
+                    setLatestVideo(allVideos[0]);
                 }
             } catch (err) {
                 console.error(err);
@@ -547,125 +532,167 @@
             }
         }
 
-        function renderCloudFiles() {
-            const tableBody = document.getElementById('cloudTableBody');
-            const videoOnly = cloudFiles.filter(f => f.is_video);
-            document.getElementById('cloudCountBadge').textContent = `${videoOnly.length} plików`;
-
-            if (videoOnly.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Brak plików w chmurze lub trwa wczytywanie...</td></tr>`;
-                return;
+        function setLatestVideo(video) {
+            latestVideo = video;
+            document.getElementById('metaFilename').textContent = video.filename;
+            document.getElementById('metaCamera').textContent = video.camera;
+            document.getElementById('metaSize').textContent = video.size_formatted;
+            document.getElementById('metaDate').textContent = video.mtime_formatted;
+            document.getElementById('latestTimeBadge').textContent = video.mtime_formatted;
+            
+            const player = document.getElementById('mainVideoPlayer');
+            const newSrc = `/api/video/${encodeURIComponent(video.rel_path)}`;
+            if (!player.src.includes(encodeURIComponent(video.rel_path))) {
+                player.src = newSrc;
             }
 
-            let html = '';
-            videoOnly.forEach(f => {
-                let badgeClass = 'badge-blue';
-                if (f.type === 'DAY') badgeClass = 'badge-green';
-                if (f.type === 'NIGHT') badgeClass = 'badge-purple';
-                if (f.type === 'FULL') badgeClass = 'badge-amber';
-
-                const localMatch = allVideos.find(v => v.filename === f.name);
-                let localStatusHtml = `<span style="color: var(--text-dim);">Brak lokalnie</span>`;
-                if (localMatch) {
-                    localStatusHtml = `<span class="badge badge-green">✓ Pobrany (${localMatch.size_formatted})</span>`;
-                }
-
-                const mtimeFormatted = f.mtime ? new Date(f.mtime).toLocaleString('pl-PL') : '-';
-
-                html += `
-                    <tr>
-                        <td><strong style="color: #fff;">${f.name}</strong></td>
-                        <td><span class="badge badge-blue">${f.camera}</span></td>
-                        <td><span class="badge ${badgeClass}">${f.type}</span></td>
-                        <td style="font-family: 'JetBrains Mono', monospace;">${f.size_formatted}</td>
-                        <td style="color: var(--text-muted);">${mtimeFormatted}</td>
-                        <td>${localStatusHtml}</td>
-                        <td style="text-align: right;">
-                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="downloadSingleFile('${f.path}', '${f.name}')">
-                                📥 ${localMatch ? 'Aktualizuj' : 'Pobierz'}
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            tableBody.innerHTML = html;
+            document.getElementById('btnOpenComparator').href = `/comparator?video=${encodeURIComponent(video.rel_path)}`;
+            if (video.has_metadata) {
+                document.getElementById('btnOpenVisualizer').href = `/visualizer?meta=${encodeURIComponent(video.metadata_file)}`;
+                document.getElementById('btnOpenVisualizer').style.display = 'inline-flex';
+            } else {
+                document.getElementById('btnOpenVisualizer').style.display = 'none';
+            }
         }
 
-        function renderVideos() {
-            const tableBody = document.getElementById('videoTableBody');
-            const search = document.getElementById('videoSearchInput').value.toLowerCase();
-            document.getElementById('videoCountBadge').textContent = `${allVideos.length} filmów`;
+        function renderCameras() {
+            const container = document.getElementById('camerasContainer');
+            const search = document.getElementById('cameraFilterInput').value.toLowerCase();
 
-            const filtered = allVideos.filter(v => v.filename.toLowerCase().includes(search) || v.camera.toLowerCase().includes(search));
+            const filtered = camerasData.filter(c => c.name.toLowerCase().includes(search));
 
             if (filtered.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Brak pobranych plików wideo. Kliknij 'Pobierz Najnowszy Główny' powyżej.</td></tr>`;
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 40px;">Brak kamer pasujących do wyszukiwania.</div>`;
                 return;
             }
 
-            if (allVideos.length > 0) {
-                latestVideo = allVideos[0];
-                document.getElementById('metaFilename').textContent = latestVideo.filename;
-                document.getElementById('metaCamera').textContent = latestVideo.camera;
-                document.getElementById('metaSize').textContent = latestVideo.size_formatted;
-                document.getElementById('metaDate').textContent = latestVideo.mtime_formatted;
-                document.getElementById('latestTimeBadge').textContent = latestVideo.mtime_formatted;
-                
-                const player = document.getElementById('mainVideoPlayer');
-                const newSrc = `/api/video/${encodeURIComponent(latestVideo.rel_path)}`;
-                if (!player.src.includes(encodeURIComponent(latestVideo.rel_path))) {
-                    player.src = newSrc;
-                }
-
-                document.getElementById('btnOpenComparator').href = `/comparator?video=${encodeURIComponent(latestVideo.rel_path)}`;
-                if (latestVideo.has_metadata) {
-                    document.getElementById('btnOpenVisualizer').href = `/visualizer?meta=${encodeURIComponent(latestVideo.metadata_file)}`;
-                    document.getElementById('btnOpenVisualizer').style.display = 'inline-flex';
-                } else {
-                    document.getElementById('btnOpenVisualizer').style.display = 'none';
-                }
-            }
-
             let html = '';
-            filtered.forEach((v, idx) => {
-                const isFirst = (idx === 0);
-                let badgeClass = 'badge-blue';
-                if (v.type === 'DAY') badgeClass = 'badge-green';
-                if (v.type === 'NIGHT') badgeClass = 'badge-purple';
-                if (v.type === 'FULL') badgeClass = 'badge-amber';
+            filtered.forEach(cam => {
+                let camIcon = '📹';
+                if (cam.name === 'Domofon') camIcon = '🚪';
+                if (cam.name === 'Front') camIcon = '🏠';
+                if (cam.name === 'Polnoc') camIcon = '🌲';
+                if (cam.name === 'Poludnie') camIcon = '☀️';
+                if (cam.name === 'Taras') camIcon = '🌿';
 
                 html += `
-                    <tr>
-                        <td>
-                            <strong style="color: #fff;">${v.filename}</strong>
-                            ${isFirst ? '<span class="badge badge-green" style="margin-left: 8px;">NAJNOWSZY</span>' : ''}
-                        </td>
-                        <td><span class="badge badge-blue">${v.camera}</span></td>
-                        <td><span class="badge ${badgeClass}">${v.type}</span></td>
-                        <td style="font-family: \'JetBrains Mono\', monospace;">${v.size_formatted}</td>
-                        <td style="color: var(--text-muted);">${v.mtime_formatted}</td>
-                        <td>
-                            ${v.has_metadata 
-                                ? `<a href="/visualizer?meta=${encodeURIComponent(v.metadata_file)}" style="color: #10b981; text-decoration: none; font-weight: 500;">✓ JSON</a>` 
-                                : `<span style="color: var(--text-dim);">-</span>`}
-                        </td>
-                        <td style="text-align: right;">
-                            <div style="display: inline-flex; gap: 8px;">
-                                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="playInMain('${v.rel_path}', '${v.filename}', '${v.camera}', '${v.size_formatted}', '${v.mtime_formatted}', '${v.metadata_file || ''}')">
-                                    ▶ Odtwórz
-                                </button>
-                                <a href="/comparator?video=${encodeURIComponent(v.rel_path)}" class="btn" style="padding: 6px 12px; font-size: 0.8rem;">
-                                    🔍 Porównaj
-                                </a>
+                    <div class="camera-card">
+                        <div class="camera-card-header">
+                            <div class="camera-title">
+                                <span>${camIcon} Kamera: <strong>${cam.name}</strong></span>
+                                ${cam.has_local ? '<span class="badge badge-green">Lokalnie dostępna</span>' : '<span class="badge badge-amber">Tylko w chmurze</span>'}
+                                ${cam.metadata && cam.metadata.is_downloaded ? '<a href="/visualizer?meta=' + encodeURIComponent(cam.metadata.filename) + '" style="font-size: 0.8rem; color: #10b981; text-decoration: none; font-weight: 600;">📊 JSON Gotowy</a>' : ''}
                             </div>
-                        </td>
-                    </tr>
+                            <div>
+                                <button class="btn btn-secondary" style="font-size: 0.8rem;" onclick="downloadCamera('${cam.name}')">
+                                    📥 Pobierz Komplet dla Kamery
+                                </button>
+                            </div>
+                        </div>
+
+                        <table class="cam-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 22%;">Wersja Filmu</th>
+                                    <th style="width: 26%;">Dysk Google (Chmura)</th>
+                                    <th style="width: 26%;">Dysk Lokalny (Serwer)</th>
+                                    <th style="width: 26%; text-align: right;">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                ['DAY', 'NIGHT', 'FULL'].forEach(vtype => {
+                    const ver = cam.versions[vtype];
+                    if (!ver) return;
+
+                    let typeBadge = 'badge-blue';
+                    let typeLabel = 'Pełny (24h)';
+                    let typeIcon = '🎬';
+                    if (vtype === 'DAY') { typeBadge = 'badge-green'; typeLabel = 'Dzień (DAY)'; typeIcon = '☀️'; }
+                    if (vtype === 'NIGHT') { typeBadge = 'badge-purple'; typeLabel = 'Noc (NIGHT)'; typeIcon = '🌙'; }
+                    if (vtype === 'FULL') { typeBadge = 'badge-amber'; typeLabel = 'Pełny (FULL)'; typeIcon = '🎬'; }
+
+                    const cld = ver.cloud;
+                    const loc = ver.local;
+
+                    let cloudHtml = `<span style="color: var(--text-dim);">- Niedostępny w chmurze -</span>`;
+                    if (cld) {
+                        const cDate = cld.mtime ? new Date(cld.mtime).toLocaleString('pl-PL') : '-';
+                        cloudHtml = `
+                            <div class="status-cell">
+                                <div><strong style="color: #fff;">${cld.size_formatted}</strong></div>
+                                <div class="status-sub">Data: ${cDate}</div>
+                            </div>
+                        `;
+                    }
+
+                    let localHtml = `<span class="badge badge-amber" style="font-size: 0.75rem;">Niepobrany</span>`;
+                    if (loc) {
+                        localHtml = `
+                            <div class="status-cell">
+                                <div>
+                                    <span class="badge badge-green" style="font-size: 0.75rem;">✓ Pobrany (${loc.size_formatted})</span>
+                                    ${ver.needs_update ? '<span class="badge badge-red" style="font-size: 0.7rem; margin-left: 4px;">Nowsza w chmurze</span>' : ''}
+                                </div>
+                                <div class="status-sub">Modyfikacja: ${loc.mtime_formatted}</div>
+                            </div>
+                        `;
+                    }
+
+                    let actionsHtml = `<div style="display: inline-flex; gap: 6px; justify-content: flex-end; width: 100%;">`;
+                    
+                    if (loc) {
+                        actionsHtml += `
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="playInPlayer('${loc.rel_path}', '${loc.filename}', '${loc.camera}', '${loc.size_formatted}', '${loc.mtime_formatted}', '${loc.metadata_file || ''}')">
+                                ▶ Odtwórz
+                            </button>
+                            <a href="/comparator?video=${encodeURIComponent(loc.rel_path)}" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">
+                                🔍 Porównaj
+                            </a>
+                        `;
+                    }
+
+                    if (cld) {
+                        const btnLabel = loc ? (ver.needs_update ? '📥 Aktualizuj' : '🔃 Pobierz ponownie') : '📥 Pobierz';
+                        actionsHtml += `
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="downloadSingleFile('${cld.path}', '${cld.name}')">
+                                ${btnLabel}
+                            </button>
+                        `;
+                    }
+
+                    actionsHtml += `</div>`;
+
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.1rem;">${typeIcon}</span>
+                                    <div>
+                                        <div style="font-weight: 600; color: #fff;">${ver.filename}</div>
+                                        <span class="badge ${typeBadge}" style="font-size: 0.7rem; padding: 2px 6px;">${typeLabel}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${cloudHtml}</td>
+                            <td>${localHtml}</td>
+                            <td style="text-align: right;">${actionsHtml}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
                 `;
             });
-            tableBody.innerHTML = html;
+
+            container.innerHTML = html;
         }
 
-        function playInMain(relPath, filename, camera, size, mtime, metaFile) {
+        function playInPlayer(relPath, filename, camera, size, mtime, metaFile) {
             const player = document.getElementById('mainVideoPlayer');
             player.src = `/api/video/${encodeURIComponent(relPath)}`;
             player.play();
@@ -688,9 +715,8 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        document.getElementById('videoSearchInput').addEventListener('input', renderVideos);
+        document.getElementById('cameraFilterInput').addEventListener('input', renderCameras);
 
-        // Pobieranie pojedynczego pliku
         async function downloadSingleFile(cloudPath, filename) {
             const term = document.getElementById('logsTerminal');
             term.innerHTML += `<p>[INFO] Żądanie pobrania: ${filename}...</p>`;
@@ -699,6 +725,23 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ path: cloudPath, name: filename })
+                });
+                const data = await res.json();
+                term.innerHTML += `<p class="ok">[START] ${data.message}</p>`;
+                pollTaskStatus();
+            } catch (e) {
+                term.innerHTML += `<p class="err">[BŁĄD] ${e.message}</p>`;
+            }
+        }
+
+        async function downloadCamera(cameraName) {
+            const term = document.getElementById('logsTerminal');
+            term.innerHTML += `<p>[INFO] Pobieranie kompletu dla kamery: ${cameraName}...</p>`;
+            try {
+                const res = await fetch('/api/gdrive/download-camera', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ camera: cameraName })
                 });
                 const data = await res.json();
                 term.innerHTML += `<p class="ok">[START] ${data.message}</p>`;
@@ -745,8 +788,8 @@
         });
 
         document.getElementById('btnRefreshAll').addEventListener('click', () => {
+            fetchCameras();
             fetchVideos();
-            fetchCloudFiles();
             checkGdriveStatus();
         });
 
@@ -755,13 +798,13 @@
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(async () => {
                 await checkGdriveStatus();
+                await fetchCameras();
                 await fetchVideos();
             }, 3000);
         }
 
-        // Start
+        fetchCameras();
         fetchVideos();
-        fetchCloudFiles();
         checkGdriveStatus();
     </script>
 </body>

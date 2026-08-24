@@ -19,8 +19,10 @@ RCLONE_CONFIG = os.environ.get("RCLONE_CONFIG", "")
 PORT = int(os.environ.get("PORT", 8000))
 HOST = os.environ.get("HOST", "0.0.0.0")
 
+CAMERA_NAMES = ["Domofon", "Front", "Polnoc", "Poludnie", "Taras"]
+
 current_task = {
-    "status": "idle", # idle, running, completed, error, cancelled
+    "status": "idle",
     "action": None,
     "progress_message": "Brak aktywnych zadań",
     "logs": ["[SYSTEM] Serwer gotowy."],
@@ -46,7 +48,7 @@ def get_local_video_files():
     for p in VIDEO_DIR.rglob("*.mp4"):
         if p.is_file():
             name = p.name
-            if "Week" in name: # Ignorujemy pliki tygodniowe na liście głównej jeśli jakieś zostały
+            if "Week" in name:
                 continue
             stat = p.stat()
             rel_path = p.relative_to(VIDEO_DIR).as_posix()
@@ -107,7 +109,6 @@ def get_rclone_cmd():
     return cmd
 
 def fetch_cloud_main_files():
-    """Zwraca listę TYLKO głównych plików zbiorczych (DAY, NIGHT, FULL, metadata.json) z Google Drive."""
     cmd = get_rclone_cmd() + [
         "lsjson", RCLONE_REMOTE,
         "--recursive", "--max-depth", "2",
@@ -151,6 +152,74 @@ def fetch_cloud_main_files():
     main_files.sort(key=lambda x: x.get("mtime", ""), reverse=True)
     return main_files
 
+def get_grouped_cameras_data():
+    local_videos = get_local_video_files()
+    local_map = {v["filename"]: v for v in local_videos}
+    local_meta_map = {m["filename"]: m for m in get_metadata_files()}
+
+    try:
+        cloud_files = fetch_cloud_main_files()
+    except Exception:
+        cloud_files = []
+
+    cloud_map = {f["name"]: f for f in cloud_files}
+
+    cameras = []
+    for cam in CAMERA_NAMES:
+        cam_info = {
+            "name": cam,
+            "versions": {
+                "DAY": None,
+                "NIGHT": None,
+                "FULL": None
+            },
+            "metadata": None,
+            "has_local": False,
+            "has_cloud": False
+        }
+
+        # Wersje wideo
+        for vtype in ["DAY", "NIGHT", "FULL"]:
+            fname = f"{cam}_{vtype}.mp4"
+            loc = local_map.get(fname)
+            cld = cloud_map.get(fname)
+            if loc or cld:
+                cam_info["versions"][vtype] = {
+                    "filename": fname,
+                    "type": vtype,
+                    "local": loc,
+                    "cloud": cld,
+                    "is_downloaded": loc is not None,
+                    "needs_update": False # Obliczymy niżej
+                }
+                if loc: cam_info["has_local"] = True
+                if cld: cam_info["has_cloud"] = True
+
+                # Sprawdzenie czy lokalny wymaga aktualizacji
+                if loc and cld and cld.get("mtime"):
+                    try:
+                        c_dt = datetime.fromisoformat(cld["mtime"].replace("Z", "+00:00")).timestamp()
+                        if c_dt > loc["mtime"] + 10:
+                            cam_info["versions"][vtype]["needs_update"] = True
+                    except Exception:
+                        pass
+
+        # Metadane
+        mname = f"{cam}_FULL_metadata.json"
+        loc_m = local_meta_map.get(mname)
+        cld_m = cloud_map.get(mname)
+        if loc_m or cld_m:
+            cam_info["metadata"] = {
+                "filename": mname,
+                "local": loc_m,
+                "cloud": cld_m,
+                "is_downloaded": loc_m is not None
+            }
+
+        cameras.append(cam_info)
+
+    return cameras
+
 def run_download_file_task(cloud_path, filename):
     global current_task, active_process
     current_task["status"] = "running"
@@ -178,17 +247,64 @@ def run_download_file_task(cloud_path, filename):
         if active_process.returncode != 0:
             raise Exception("Pobieranie zostało przerwane lub wystąpił błąd.")
 
-        # Jeśli to wideo, pobierz także metadane json
         if filename.endswith(".mp4") and not filename.endswith("_metadata.json"):
             meta_name = filename.replace(".mp4", "_metadata.json")
             meta_remote = remote_source.replace(".mp4", "_metadata.json")
             local_meta = VIDEO_DIR / meta_name
-            cmd_meta = get_rclone_cmd() + ["copyto", meta_remote, str(local_meta)]
+            cmd_meta = get_rclone_cmd() + ["copyto", meta_remote, str(local_meta), "--update"]
             subprocess.run(cmd_meta, capture_output=True, timeout=20)
 
         current_task["status"] = "completed"
         current_task["progress_message"] = f"Plik {filename} został pomyślnie zaktualizowany!"
         current_task["logs"].append(f"[SUKCES] Pobrano {filename}.")
+    except Exception as e:
+        if current_task["status"] != "cancelled":
+            current_task["status"] = "error"
+            current_task["progress_message"] = f"Błąd: {str(e)}"
+            current_task["logs"].append(f"[BŁĄD] {str(e)}")
+    finally:
+        active_process = None
+        current_task["end_time"] = datetime.now().isoformat()
+
+def run_download_camera_task(camera_name):
+    global current_task, active_process
+    current_task["status"] = "running"
+    current_task["action"] = f"Pobieranie kompletu dla kamery {camera_name}"
+    current_task["start_time"] = datetime.now().isoformat()
+    current_task["logs"] = [f"[START] Pobieranie wszystkich wersji dla kamery {camera_name}..."]
+
+    try:
+        files = fetch_cloud_main_files()
+        cam_files = [f for f in files if f["camera"] == camera_name]
+        if not cam_files:
+            raise Exception(f"Nie znaleziono plików dla kamery {camera_name} na Dysku Google.")
+
+        for idx, f in enumerate(cam_files, 1):
+            if current_task["status"] == "cancelled":
+                break
+            fname = f["name"]
+            cpath = f["path"]
+            current_task["progress_message"] = f"[{idx}/{len(cam_files)}] Pobieranie {fname}..."
+            current_task["logs"].append(f"Pobieranie {fname} ({f['size_formatted']})...")
+
+            remote_src = f"{RCLONE_REMOTE.rstrip('/')}/{cpath}"
+            local_dst = VIDEO_DIR / fname
+
+            cmd = get_rclone_cmd() + ["copyto", remote_src, str(local_dst), "-P", "--update"]
+            active_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            current_task["pid"] = active_process.pid
+
+            for line in active_process.stdout:
+                line_str = line.strip()
+                if line_str and ("%" in line_str or "ETA" in line_str):
+                    current_task["progress_message"] = f"[{idx}/{len(cam_files)}] {fname}: {line_str}"
+
+            active_process.wait()
+
+        if current_task["status"] != "cancelled":
+            current_task["status"] = "completed"
+            current_task["progress_message"] = f"Komplet plików dla kamery {camera_name} jest aktualny!"
+            current_task["logs"].append(f"[SUKCES] Zakończono pobieranie kamery {camera_name}.")
     except Exception as e:
         if current_task["status"] != "cancelled":
             current_task["status"] = "error"
@@ -232,7 +348,6 @@ def run_sync_main_files_task():
 
             active_process.wait()
 
-            # Pobranie metadanych JSON
             meta_name = fname.replace(".mp4", "_metadata.json")
             meta_remote = remote_src.replace(".mp4", "_metadata.json")
             local_meta = VIDEO_DIR / meta_name
@@ -298,7 +413,10 @@ class TimelapseHTTPHandler(BaseHTTPRequestHandler):
             self.serve_file(BASE_DIR / "help.html", "text/html; charset=utf-8")
             return
 
-        if path == "/api/videos":
+        if path == "/api/cameras":
+            self.send_json({"cameras": get_grouped_cameras_data()})
+            return
+        elif path == "/api/videos":
             self.send_json({"videos": get_local_video_files()})
             return
         elif path == "/api/gdrive/cloud-files":
@@ -417,6 +535,24 @@ class TimelapseHTTPHandler(BaseHTTPRequestHandler):
                     return
                 threading.Thread(target=run_download_file_task, args=(cpath, fname), daemon=True).start()
                 self.send_json({"status": "started", "message": f"Rozpoczęto pobieranie {fname}."})
+            except Exception as e:
+                self.send_json({"status": "error", "message": str(e)})
+            return
+
+        elif path == "/api/gdrive/download-camera":
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                payload = json.loads(post_data.decode('utf-8'))
+                camera_name = payload.get("camera")
+                if not camera_name:
+                    self.send_json({"status": "error", "message": "Brak parametru camera."})
+                    return
+                if current_task["status"] == "running":
+                    self.send_json({"status": "busy", "message": "Inne zadanie jest w trakcie wykonywania."})
+                    return
+                threading.Thread(target=run_download_camera_task, args=(camera_name,), daemon=True).start()
+                self.send_json({"status": "started", "message": f"Rozpoczęto pobieranie kompletu dla kamery {camera_name}."})
             except Exception as e:
                 self.send_json({"status": "error", "message": str(e)})
             return

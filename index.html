@@ -3,51 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centrum Timelapse & Porównywarka Klatek - BlueIris</title>
+    <title>BlueIris Timelapse Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #090d16;
-            --bg-card: #121826;
-            --bg-card-hover: #1a2337;
-            --bg-input: #1a2234;
-            --border-color: #26334d;
+            --bg-dark: #070a13;
+            --bg-card: #0f1626;
+            --bg-card-header: #151f36;
+            --bg-card-hover: #17223b;
+            --bg-input: #141c2e;
+            --border: #1e2c4a;
+            --border-light: rgba(255, 255, 255, 0.08);
+            
             --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.3);
-            --accent-green: #10b981;
-            --accent-green-glow: rgba(16, 185, 129, 0.3);
-            --accent-amber: #f59e0b;
-            --accent-purple: #8b5cf6;
-            --accent-red: #ef4444;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --text-dim: #6b7280;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.25);
+            
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.25);
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+            --red: #ef4444;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: radial-gradient(circle at top center, #111827 0%, #030712 100%);
+            background: radial-gradient(circle at top center, #0e172e 0%, #060912 100%);
             color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 20px 40px;
+            padding: 24px 32px;
+            line-height: 1.5;
         }
 
+        /* HEADER */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        .logo-title {
+        .logo-group {
             display: flex;
             align-items: center;
             gap: 14px;
@@ -56,111 +64,162 @@
         .logo-icon {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 20px;
+            color: #fff;
             box-shadow: 0 0 20px var(--accent-glow);
+            font-family: 'Outfit', sans-serif;
         }
 
-        h1 {
-            font-size: 1.6rem;
+        .logo-text h1 {
+            font-size: 1.5rem;
             font-weight: 700;
+            font-family: 'Outfit', sans-serif;
             background: linear-gradient(90deg, #ffffff, #cbd5e1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 10px;
+        .logo-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
-        .nav-btn {
+        .nav-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
             background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 10px 18px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
             border-radius: 10px;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-weight: 500;
+            font-size: 0.88rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             transition: all 0.2s ease;
         }
 
-        .nav-btn:hover, .nav-btn.active {
-            background: var(--accent);
+        .nav-item:hover, .nav-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #fff;
             border-color: var(--accent);
             box-shadow: 0 0 15px var(--accent-glow);
-            transform: translateY(-2px);
         }
 
-        .grid-layout {
+        /* GRID LAYOUT (ODTWARZACZ + GOOGLE DRIVE) */
+        .top-grid {
             display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 25px;
-            margin-bottom: 25px;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        @media (max-width: 1024px) {
-            .grid-layout { grid-template-columns: 1fr; }
-            body { padding: 15px; }
+        @media (max-width: 1080px) {
+            .top-grid { grid-template-columns: 1fr; }
+            body { padding: 16px; }
         }
 
         .card {
             background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
-            margin-bottom: 25px;
         }
 
-        .card-header {
+        .card-header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
         }
 
         .card-title {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 600;
+            font-family: 'Outfit', sans-serif;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #fff;
         }
 
-        .badge {
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 600;
+        /* ODTWARZACZ WIDEO */
+        .video-box {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16 / 9;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .video-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .meta-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .meta-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .meta-stat {
+            background: var(--bg-input);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+        }
+
+        .meta-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
             text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 3px;
         }
-        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
-        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
-        .badge-purple { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); }
-        .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-        .badge-red { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
 
+        .meta-val {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* PRZYCISKI */
         .btn {
             background: var(--accent);
-            color: #ffffff;
+            color: #fff;
             border: none;
             padding: 8px 14px;
             border-radius: 8px;
-            font-weight: 600;
+            font-weight: 500;
             font-size: 0.85rem;
             cursor: pointer;
             display: inline-flex;
@@ -169,291 +228,316 @@
             gap: 6px;
             transition: all 0.2s ease;
             text-decoration: none;
+            white-space: nowrap;
         }
 
         .btn:hover {
             opacity: 0.95;
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateY(-1px);
+            box-shadow: 0 0 15px var(--accent-glow);
         }
 
         .btn-green {
             background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 0 15px var(--accent-green-glow);
         }
-        .btn-green:hover { box-shadow: 0 0 25px var(--accent-green-glow); }
+        .btn-green:hover { box-shadow: 0 0 15px var(--green-glow); }
 
         .btn-purple {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
         }
 
         .btn-secondary {
             background: var(--bg-input);
             color: var(--text-main);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
-        .btn-secondary:hover { background: var(--bg-card-hover); }
-
-        /* Podgląd wideo */
-        .video-container {
-            width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #000;
-            aspect-ratio: 16 / 9;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            position: relative;
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--text-muted);
         }
 
-        .video-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
         }
 
-        .meta-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 6px;
         }
 
-        .meta-box {
-            background: var(--bg-input);
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        .meta-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
+        /* BADGE */
+        .badge {
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
             text-transform: uppercase;
         }
+        .badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-dim { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border: 1px solid var(--border-light); }
 
-        .meta-val {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #fff;
+        /* TERMINAL & STATUS */
+        .terminal-box {
+            background: #050811;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
             font-family: 'JetBrains Mono', monospace;
-            word-break: break-all;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            max-height: 140px;
+            overflow-y: auto;
+            line-height: 1.5;
+            margin-top: 12px;
         }
+        .terminal-box p { margin-bottom: 2px; }
+        .terminal-box .err { color: #f87171; }
+        .terminal-box .ok { color: #34d399; }
 
-        .actions-bar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
         }
-
-        /* Sekcje kamer i zintegrowana tabela */
-        .camera-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
         }
+        .dot-green { background: var(--green); box-shadow: 0 0 8px var(--green); }
 
-        .camera-card-header {
-            background: rgba(26, 34, 52, 0.6);
-            padding: 16px 20px;
+        /* KARTY KAMER */
+        .cameras-section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-        .camera-title {
-            font-size: 1.25rem;
+        .cameras-section-title {
+            font-size: 1.3rem;
             font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cam-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .cam-card-head {
+            background: var(--bg-card-header);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .cam-title-left {
             display: flex;
             align-items: center;
             gap: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
         }
 
         .cam-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
         }
 
         .cam-table th {
             text-align: left;
-            padding: 12px 18px;
+            padding: 10px 20px;
             color: var(--text-muted);
-            background: rgba(10, 14, 24, 0.4);
-            font-weight: 500;
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(8, 12, 22, 0.6);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
         }
 
         .cam-table td {
-            padding: 14px 18px;
+            padding: 12px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             vertical-align: middle;
         }
 
-        .cam-table tr:last-child td {
-            border-bottom: none;
+        .cam-table tr:last-child td { border-bottom: none; }
+        .cam-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .ver-name-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .cam-table tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+        .ver-icon {
+            font-size: 1.25rem;
+            line-height: 1;
         }
 
-        .status-cell {
+        .ver-title {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .table-data-box {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
 
-        .status-sub {
+        .table-size {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .table-sub {
             font-size: 0.75rem;
             color: var(--text-dim);
-            font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Terminal */
-        .logs-terminal {
-            background: #050811;
-            border: 1px solid #1a243b;
-            border-radius: 10px;
-            padding: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #38bdf8;
-            max-height: 180px;
-            overflow-y: auto;
-            margin-top: 15px;
-            line-height: 1.5;
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            align-items: center;
         }
-
-        .logs-terminal p { margin-bottom: 4px; }
-        .logs-terminal .err { color: #f87171; }
-        .logs-terminal .ok { color: #4ade80; }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .dot-green { background: #10b981; box-shadow: 0 0 8px #10b981; }
-        .dot-yellow { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-        .dot-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-title">
+        <div class="logo-group">
             <div class="logo-icon">BI</div>
-            <div>
+            <div class="logo-text">
                 <h1>BlueIris Timelapse Hub</h1>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">Zintegrowany panel analizy i synchronizacji filmów z kamer</p>
+                <p>Zintegrowane centrum porównywania klatek i synchronizacji kamer</p>
             </div>
         </div>
 
-        <nav class="nav-links">
-            <a href="/" class="nav-btn active">🏠 Dashboard</a>
-            <a href="/comparator" class="nav-btn">🔍 Porównywarka Klatek</a>
-            <a href="/visualizer" class="nav-btn">📊 Wizualizator Kompletności</a>
-            <a href="/help" class="nav-btn">📖 Podręcznik</a>
+        <nav class="nav-group">
+            <a href="/" class="nav-item active">🏠 Dashboard</a>
+            <a href="/comparator" class="nav-item">🔍 Porównywarka Klatek</a>
+            <a href="/visualizer" class="nav-item">📊 Wizualizator Kompletności</a>
+            <a href="/help" class="nav-item">📖 Podręcznik</a>
         </nav>
     </header>
 
-    <div class="grid-layout">
+    <!-- GÓRNA SEKCJA: ODTWARZACZ + GOOGLE DRIVE -->
+    <div class="top-grid">
         
-        <!-- KARTA 1: AKTYWNY / NAJNOWSZY FILM -->
+        <!-- ODTWARZACZ -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header-row">
                 <div class="card-title">
-                    <span>🎬 Podgląd Wideo & Narzędzia</span>
+                    <span>🎬 Podgląd Wideo</span>
                     <span class="badge badge-green" id="latestBadge">NAJNOWSZY</span>
                 </div>
-                <div id="latestTimeBadge" style="font-size: 0.85rem; color: var(--text-muted);">-</div>
+                <div id="latestTimeBadge" style="font-size: 0.8rem; color: var(--text-muted);">-</div>
             </div>
 
-            <div class="video-container">
+            <div class="video-box">
                 <video id="mainVideoPlayer" controls preload="metadata">
-                    Twoja przeglądarka nie obsługuje tagu wideo.
+                    Przeglądarka nie obsługuje tagu wideo.
                 </video>
             </div>
 
-            <div class="meta-info-grid">
-                <div class="meta-box">
+            <div class="meta-stats">
+                <div class="meta-stat">
                     <div class="meta-label">Plik</div>
                     <div class="meta-val" id="metaFilename">-</div>
                 </div>
-                <div class="meta-box">
+                <div class="meta-stat">
                     <div class="meta-label">Kamera</div>
                     <div class="meta-val" id="metaCamera">-</div>
                 </div>
-                <div class="meta-box">
+                <div class="meta-stat">
                     <div class="meta-label">Rozmiar</div>
                     <div class="meta-val" id="metaSize">-</div>
                 </div>
-                <div class="meta-box">
+                <div class="meta-stat">
                     <div class="meta-label">Data Modyfikacji</div>
                     <div class="meta-val" id="metaDate">-</div>
                 </div>
             </div>
 
-            <div class="actions-bar">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <a id="btnOpenComparator" href="/comparator" class="btn btn-green">
                     🔍 Otwórz w Porównywarce (Kalibracja A/B)
                 </a>
                 <a id="btnOpenVisualizer" href="/visualizer" class="btn btn-purple">
-                    📊 Zobacz Kompletność i Oś Czasu
+                    📊 Zobacz Kompletność & Oś Czasu
                 </a>
             </div>
         </div>
 
-        <!-- KARTA 2: DYSK GOOGLE & AKCJE ZBIORCZE -->
+        <!-- GOOGLE DRIVE & STEROWANIE -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header-row">
                 <div class="card-title">
-                    <span>☁️ Synchronizacja z Dyskiem Google</span>
+                    <span>☁️ Dysk Google</span>
                 </div>
-                <div id="rcloneStatusIndicator">
-                    <span class="status-dot dot-green"></span>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">Połączono z Google Drive</span>
+                <div class="status-indicator">
+                    <span class="dot dot-green"></span>
+                    <span>Połączono z Google Drive</span>
                 </div>
             </div>
 
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">
-                Pobieraj i aktualizuj pełne pliki zbiorcze (<strong>DAY</strong>, <strong>NIGHT</strong>, <strong>FULL</strong>) dla 5 kamer z pominięciem archiwów tygodniowych.
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; line-height: 1.4;">
+                Aktualizuj pełne pliki zbiorcze (<strong>DAY</strong>, <strong>NIGHT</strong>, <strong>FULL</strong>) dla kamer z pominięciem archiwów tygodniowych.
             </p>
 
-            <div class="actions-bar" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
                 <button id="btnDownloadLatest" class="btn btn-green">
                     📥 Pobierz Najnowszy Główny
                 </button>
                 <button id="btnSyncMain" class="btn">
-                    🔄 Aktualizuj Wszystkie Kamery (DAY/NIGHT/FULL)
+                    🔄 Aktualizuj Wszystkie Kamery
                 </button>
                 <button id="btnCancelTask" class="btn btn-danger" style="display: none;">
                     ⛔ Przerwij Zadanie
                 </button>
                 <button id="btnRefreshAll" class="btn btn-secondary">
-                    🔃 Odśwież Status
+                    🔃 Odśwież
                 </button>
             </div>
 
-            <div class="meta-box" style="margin-bottom: 10px;">
+            <div class="meta-stat">
                 <div class="meta-label">Status Zadania Rclone</div>
-                <div class="meta-val" id="taskStatusText" style="font-size: 0.9rem; color: #38bdf8;">Gotowy</div>
+                <div class="meta-val" id="taskStatusText" style="color: #38bdf8; font-size: 0.85rem;">Gotowy</div>
             </div>
 
-            <div class="logs-terminal" id="logsTerminal">
+            <div class="terminal-box" id="logsTerminal">
                 <p class="ok">[SYSTEM] Połączono z serwerem BlueIris Timelapse Hub.</p>
                 <p>[INFO] Gotowy do operacji na plikach głównych.</p>
             </div>
@@ -461,18 +545,17 @@
 
     </div>
 
-    <!-- SEKCJA: ZINTEGROWANA TABELA Z PODZIAŁEM NA KAMERY -->
-    <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 1.4rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px;">
+    <!-- SEKCJA KAMER I ZINTEGROWANEJ TABELI -->
+    <div class="cameras-section-header">
+        <div class="cameras-section-title">
             <span>📹 Kamery i Wersje Filmów (Chmura & Dysk Lokalny)</span>
-        </h2>
+        </div>
         <div>
             <input type="text" id="cameraFilterInput" placeholder="Filtruj kamerę..." 
-                   style="background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 10px; font-family: inherit; font-size: 0.9rem;">
+                   style="background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 8px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85rem; outline: none;">
         </div>
     </div>
 
-    <!-- KONTENER KART KAMER -->
     <div id="camerasContainer">
         <div style="text-align: center; color: var(--text-muted); padding: 40px;">Wczytywanie danych kamer i chmury...</div>
     </div>
@@ -576,15 +659,15 @@
                 if (cam.name === 'Taras') camIcon = '🌿';
 
                 html += `
-                    <div class="camera-card">
-                        <div class="camera-card-header">
-                            <div class="camera-title">
-                                <span>${camIcon} Kamera: <strong>${cam.name}</strong></span>
+                    <div class="cam-card">
+                        <div class="cam-card-head">
+                            <div class="cam-title-left">
+                                <span>${camIcon} <strong>${cam.name}</strong></span>
                                 ${cam.has_local ? '<span class="badge badge-green">Lokalnie dostępna</span>' : '<span class="badge badge-amber">Tylko w chmurze</span>'}
-                                ${cam.metadata && cam.metadata.is_downloaded ? '<a href="/visualizer?meta=' + encodeURIComponent(cam.metadata.filename) + '" style="font-size: 0.8rem; color: #10b981; text-decoration: none; font-weight: 600;">📊 JSON Gotowy</a>' : ''}
+                                ${cam.metadata && cam.metadata.is_downloaded ? '<a href="/visualizer?meta=' + encodeURIComponent(cam.metadata.filename) + '" class="badge badge-purple" style="text-decoration: none;">📊 JSON Gotowy</a>' : ''}
                             </div>
                             <div>
-                                <button class="btn btn-secondary" style="font-size: 0.8rem;" onclick="downloadCamera('${cam.name}')">
+                                <button class="btn btn-secondary btn-sm" onclick="downloadCamera('${cam.name}')">
                                     📥 Pobierz Komplet dla Kamery
                                 </button>
                             </div>
@@ -593,10 +676,10 @@
                         <table class="cam-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 22%;">Wersja Filmu</th>
-                                    <th style="width: 26%;">Dysk Google (Chmura)</th>
-                                    <th style="width: 26%;">Dysk Lokalny (Serwer)</th>
-                                    <th style="width: 26%; text-align: right;">Akcje</th>
+                                    <th style="width: 28%;">Wersja Filmu</th>
+                                    <th style="width: 24%;">Dysk Google (Chmura)</th>
+                                    <th style="width: 24%;">Dysk Lokalny (Serwer)</th>
+                                    <th style="width: 24%; text-align: right;">Akcje</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -616,47 +699,48 @@
                     const cld = ver.cloud;
                     const loc = ver.local;
 
-                    let cloudHtml = `<span style="color: var(--text-dim);">- Niedostępny w chmurze -</span>`;
+                    let cloudHtml = `<span class="badge badge-dim">- Brak w chmurze -</span>`;
                     if (cld) {
                         const cDate = cld.mtime ? new Date(cld.mtime).toLocaleString('pl-PL') : '-';
                         cloudHtml = `
-                            <div class="status-cell">
-                                <div><strong style="color: #fff;">${cld.size_formatted}</strong></div>
-                                <div class="status-sub">Data: ${cDate}</div>
+                            <div class="table-data-box">
+                                <div class="table-size">${cld.size_formatted}</div>
+                                <div class="table-sub">Data: ${cDate}</div>
                             </div>
                         `;
                     }
 
-                    let localHtml = `<span class="badge badge-amber" style="font-size: 0.75rem;">Niepobrany</span>`;
+                    let localHtml = `<span class="badge badge-amber">Niepobrany</span>`;
                     if (loc) {
                         localHtml = `
-                            <div class="status-cell">
+                            <div class="table-data-box">
                                 <div>
-                                    <span class="badge badge-green" style="font-size: 0.75rem;">✓ Pobrany (${loc.size_formatted})</span>
-                                    ${ver.needs_update ? '<span class="badge badge-red" style="font-size: 0.7rem; margin-left: 4px;">Nowsza w chmurze</span>' : ''}
+                                    <span class="badge badge-green">✓ Pobrany</span>
+                                    <span style="font-weight: 600; color: #fff; font-size: 0.85rem; margin-left: 4px;">${loc.size_formatted}</span>
+                                    ${ver.needs_update ? '<span class="badge badge-red" style="margin-left: 4px;">Nowsza w chmurze</span>' : ''}
                                 </div>
-                                <div class="status-sub">Modyfikacja: ${loc.mtime_formatted}</div>
+                                <div class="table-sub">Zapisano: ${loc.mtime_formatted}</div>
                             </div>
                         `;
                     }
 
-                    let actionsHtml = `<div style="display: inline-flex; gap: 6px; justify-content: flex-end; width: 100%;">`;
+                    let actionsHtml = `<div class="actions-cell">`;
                     
                     if (loc) {
                         actionsHtml += `
-                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="playInPlayer('${loc.rel_path}', '${loc.filename}', '${loc.camera}', '${loc.size_formatted}', '${loc.mtime_formatted}', '${loc.metadata_file || ''}')">
+                            <button class="btn btn-secondary btn-sm" onclick="playInPlayer('${loc.rel_path}', '${loc.filename}', '${loc.camera}', '${loc.size_formatted}', '${loc.mtime_formatted}', '${loc.metadata_file || ''}')">
                                 ▶ Odtwórz
                             </button>
-                            <a href="/comparator?video=${encodeURIComponent(loc.rel_path)}" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">
+                            <a href="/comparator?video=${encodeURIComponent(loc.rel_path)}" class="btn btn-sm">
                                 🔍 Porównaj
                             </a>
                         `;
                     }
 
                     if (cld) {
-                        const btnLabel = loc ? (ver.needs_update ? '📥 Aktualizuj' : '🔃 Pobierz ponownie') : '📥 Pobierz';
+                        const btnLabel = loc ? (ver.needs_update ? '📥 Aktualizuj' : '🔃 Pobierz') : '📥 Pobierz';
                         actionsHtml += `
-                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="downloadSingleFile('${cld.path}', '${cld.name}')">
+                            <button class="btn btn-secondary btn-sm" onclick="downloadSingleFile('${cld.path}', '${cld.name}')">
                                 ${btnLabel}
                             </button>
                         `;
@@ -667,17 +751,17 @@
                     html += `
                         <tr>
                             <td>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.1rem;">${typeIcon}</span>
+                                <div class="ver-name-box">
+                                    <span class="ver-icon">${typeIcon}</span>
                                     <div>
-                                        <div style="font-weight: 600; color: #fff;">${ver.filename}</div>
-                                        <span class="badge ${typeBadge}" style="font-size: 0.7rem; padding: 2px 6px;">${typeLabel}</span>
+                                        <div class="ver-title">${ver.filename}</div>
+                                        <span class="badge ${typeBadge}">${typeLabel}</span>
                                     </div>
                                 </div>
                             </td>
                             <td>${cloudHtml}</td>
                             <td>${localHtml}</td>
-                            <td style="text-align: right;">${actionsHtml}</td>
+                            <td>${actionsHtml}</td>
                         </tr>
                     `;
                 });
@@ -702,7 +786,7 @@
             document.getElementById('metaSize').textContent = size;
             document.getElementById('metaDate').textContent = mtime;
             document.getElementById('latestTimeBadge').textContent = mtime;
-            document.getElementById('latestBadge').style.display = (latestVideo && latestVideo.filename === filename) ? 'inline-block' : 'none';
+            document.getElementById('latestBadge').style.display = (latestVideo && latestVideo.filename === filename) ? 'inline-flex' : 'none';
 
             document.getElementById('btnOpenComparator').href = `/comparator?video=${encodeURIComponent(relPath)}`;
             if (metaFile) {

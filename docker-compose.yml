@@ -1,4 +1,4 @@
-﻿services:
+services:
   timelapse-hub:
     build:
       context: .
@@ -6,7 +6,7 @@
     container_name: blueiris-timelapse-hub
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8585:8000"
     environment:
       - VIDEO_DIR=/app/data
       - RCLONE_REMOTE=drive_timelapse:/VIDEO

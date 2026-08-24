@@ -1,0 +1,20 @@
+﻿services:
+  timelapse-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blueiris-timelapse-hub
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - VIDEO_DIR=/app/data
+      - RCLONE_REMOTE=drive_timelapse:/VIDEO
+      - RCLONE_CONFIG=/root/.config/rclone/rclone.conf
+      - PORT=8000
+      - HOST=0.0.0.0
+    volumes:
+      # Katalog z plikami wideo (na serwerze Ubuntu utwórz np. ./data lub podmontuj dysk z filmami)
+      - ./data:/app/data
+      # Plik konfiguracyjny rclone z dostępem do Dysku Google (read-only)
+      - ./rclone.conf:/root/.config/rclone/rclone.conf:ro

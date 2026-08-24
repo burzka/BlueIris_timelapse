@@ -579,20 +579,20 @@
         </div>
 
         <div class="header-controls">
+            <a href="/" class="btn" style="background: var(--bg-card); border: 1px solid var(--border-color); text-decoration: none; padding: 6px 12px; font-size: 0.85rem;">🏠 Dashboard</a>
+            <a href="/visualizer" class="btn" style="background: var(--bg-card); border: 1px solid var(--border-color); text-decoration: none; padding: 6px 12px; font-size: 0.85rem;">📊 Kompletność</a>
+            <a href="/help" class="btn" style="background: var(--bg-card); border: 1px solid var(--border-color); text-decoration: none; padding: 6px 12px; font-size: 0.85rem;">📖 Pomoc</a>
+
             <div class="file-select-group">
-                <span style="font-size: 0.85rem; color: var(--text-muted);">Wideo z folderu:</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Wideo:</span>
                 <select id="presetVideoSelect">
-                    <option value="Front_DAY.mp4">Front_DAY.mp4</option>
-                    <option value="Domofon_DAY.mp4">Domofon_DAY.mp4</option>
-                    <option value="Polnoc_DAY.mp4">Polnoc_DAY.mp4</option>
-                    <option value="Poludnie_DAY.mp4">Poludnie_DAY.mp4</option>
-                    <option value="Taras_DAY.mp4">Taras_DAY.mp4</option>
+                    <option value="">Wczytywanie filmów...</option>
                 </select>
                 <button class="btn" id="btnLoadPreset">Załaduj</button>
             </div>
 
             <label class="btn-file">
-                📁 Wybierz plik MP4 z dysku
+                📁 Z dysku
                 <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
             </label>
         </div>
@@ -811,11 +811,71 @@
             videoNameBadge.textContent = name;
         }
 
-        // Domyślny rozruch z plikiem z listy
-        loadVideoSource(presetVideoSelect.value, presetVideoSelect.value);
+        // Inicjalizacja listy wideo z serwera lub fallback
+        async function initVideoList() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetVideoParam = urlParams.get('video');
+
+            try {
+                const res = await fetch('/api/videos');
+                const data = await res.json();
+                const videos = data.videos || [];
+
+                if (videos.length > 0) {
+                    presetVideoSelect.innerHTML = '';
+                    let selectedUrl = `/api/video/${encodeURIComponent(videos[0].rel_path)}`;
+                    let selectedName = videos[0].filename;
+
+                    videos.forEach((v, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = `/api/video/${encodeURIComponent(v.rel_path)}`;
+                        opt.dataset.name = v.filename;
+                        opt.textContent = `${v.filename} (${v.size_formatted}) ${idx === 0 ? '★ NAJNOWSZY' : ''}`;
+                        
+                        if (targetVideoParam && (v.rel_path === targetVideoParam || v.filename === targetVideoParam)) {
+                            opt.selected = true;
+                            selectedUrl = opt.value;
+                            selectedName = v.filename;
+                        }
+                        presetVideoSelect.appendChild(opt);
+                    });
+
+                    loadVideoSource(selectedUrl, selectedName);
+                    return;
+                }
+            } catch (err) {
+                console.warn("Brak połączenia z API /api/videos, używam listy domyślnej:", err);
+            }
+
+            // Fallback dla serwera statycznego / pliku lokalnego
+            const fallbackList = ['Front_DAY.mp4', 'Domofon_DAY.mp4', 'Polnoc_DAY.mp4', 'Poludnie_DAY.mp4', 'Taras_DAY.mp4'];
+            presetVideoSelect.innerHTML = '';
+            fallbackList.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.dataset.name = v;
+                opt.textContent = v;
+                if (targetVideoParam && targetVideoParam === v) opt.selected = true;
+                presetVideoSelect.appendChild(opt);
+            });
+            const selOpt = presetVideoSelect.options[presetVideoSelect.selectedIndex] || presetVideoSelect.options[0];
+            loadVideoSource(selOpt.value, selOpt.dataset.name || selOpt.value);
+        }
+
+        initVideoList();
 
         btnLoadPreset.addEventListener('click', () => {
-            loadVideoSource(presetVideoSelect.value, presetVideoSelect.value);
+            const selOpt = presetVideoSelect.options[presetVideoSelect.selectedIndex];
+            if (selOpt) {
+                loadVideoSource(selOpt.value, selOpt.dataset.name || selOpt.value);
+            }
+        });
+
+        presetVideoSelect.addEventListener('change', () => {
+            const selOpt = presetVideoSelect.options[presetVideoSelect.selectedIndex];
+            if (selOpt) {
+                loadVideoSource(selOpt.value, selOpt.dataset.name || selOpt.value);
+            }
         });
 
         videoFileInput.addEventListener('change', (e) => {

@@ -33,7 +33,17 @@ obj/
 # Pliki konfiguracyjne z wrażliwymi danymi
 Blue Iris.reg
 *.conf
+rclone.conf
 *.json_secret
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+data/
 
 # Systemowe
 Thumbs.db

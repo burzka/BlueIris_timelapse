@@ -1,0 +1,631 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centrum Timelapse & Porównywarka Klatek - BlueIris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: #121826;
+            --bg-card-hover: #1a2337;
+            --bg-input: #1a2234;
+            --border-color: #26334d;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.3);
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: radial-gradient(circle at top center, #111827 0%, #030712 100%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 40px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            body { padding: 15px; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-purple { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); }
+        .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+
+        .btn {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            opacity: 0.95;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 0 15px var(--accent-green-glow);
+        }
+        .btn-green:hover { box-shadow: 0 0 25px var(--accent-green-glow); }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover { background: var(--bg-card-hover); }
+
+        /* Podgląd wideo */
+        .video-container {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16 / 9;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .meta-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .meta-box {
+            background: var(--bg-input);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .meta-val {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Lista plików */
+        .file-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .file-table th {
+            text-align: left;
+            padding: 10px 14px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        .file-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .file-table tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        /* Logi i status rclone */
+        .logs-terminal {
+            background: #050811;
+            border: 1px solid #1a243b;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+
+        .logs-terminal p { margin-bottom: 4px; }
+        .logs-terminal .err { color: #f87171; }
+        .logs-terminal .ok { color: #4ade80; }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .dot-green { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .dot-yellow { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+        .dot-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-title">
+            <div class="logo-icon">BI</div>
+            <div>
+                <h1>BlueIris Timelapse Automation Hub</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Centrum analizy timelapse, porównywania klatek i synchronizacji Google Drive</p>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <a href="/" class="nav-btn active">🏠 Dashboard</a>
+            <a href="/comparator" class="nav-btn">🔍 Porównywarka Klatek</a>
+            <a href="/visualizer" class="nav-btn">📊 Wizualizator Kompletności</a>
+            <a href="/help" class="nav-btn">📖 Podręcznik</a>
+        </nav>
+    </header>
+
+    <div class="grid-layout">
+        
+        <!-- KARTA 1: NAJNOWSZY FILM (Odtwarzacz & Szybka Analiza) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🎬 Najnowszy Film Timelapse</span>
+                    <span class="badge badge-green" id="latestBadge">NAJNOWSZY</span>
+                </div>
+                <div id="latestTimeBadge" style="font-size: 0.85rem; color: var(--text-muted);">-</div>
+            </div>
+
+            <div class="video-container">
+                <video id="mainVideoPlayer" controls preload="metadata">
+                    Twoja przeglądarka nie obsługuje tagu wideo.
+                </video>
+            </div>
+
+            <div class="meta-info-grid">
+                <div class="meta-box">
+                    <div class="meta-label">Plik</div>
+                    <div class="meta-val" id="metaFilename">-</div>
+                </div>
+                <div class="meta-box">
+                    <div class="meta-label">Kamera</div>
+                    <div class="meta-val" id="metaCamera">-</div>
+                </div>
+                <div class="meta-box">
+                    <div class="meta-label">Rozmiar</div>
+                    <div class="meta-val" id="metaSize">-</div>
+                </div>
+                <div class="meta-box">
+                    <div class="meta-label">Data Modyfikacji</div>
+                    <div class="meta-val" id="metaDate">-</div>
+                </div>
+            </div>
+
+            <div class="actions-bar">
+                <a id="btnOpenComparator" href="/comparator" class="btn btn-green">
+                    🔍 Otwórz w Porównywarce (Kalibracja A/B)
+                </a>
+                <a id="btnOpenVisualizer" href="/visualizer" class="btn btn-purple">
+                    📊 Zobacz Kompletność i Oś Czasu
+                </a>
+            </div>
+        </div>
+
+        <!-- KARTA 2: DYSK GOOGLE & SYNCHRONIZACJA -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>☁️ Integracja z Dyskiem Google</span>
+                </div>
+                <div id="rcloneStatusIndicator">
+                    <span class="status-dot dot-green"></span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Rclone Gotowy</span>
+                </div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">
+                Pobieraj automatycznie najświeższe filmy z chmury lub synchronizuj całe archiwa wideo z kamer.
+            </p>
+
+            <div class="actions-bar" style="margin-bottom: 20px;">
+                <button id="btnDownloadLatest" class="btn">
+                    📥 Pobierz Najnowszy z Dysku
+                </button>
+                <button id="btnSyncAll" class="btn btn-secondary">
+                    🔄 Pełna Synchronizacja (Wszystko)
+                </button>
+                <button id="btnRefreshList" class="btn btn-secondary">
+                    🔃 Odśwież Listę
+                </button>
+            </div>
+
+            <div class="meta-box" style="margin-bottom: 10px;">
+                <div class="meta-label">Status Zadania</div>
+                <div class="meta-val" id="taskStatusText" style="font-size: 0.9rem; color: #38bdf8;">Gotowy</div>
+            </div>
+
+            <div class="logs-terminal" id="logsTerminal">
+                <p class="ok">[SYSTEM] Połączono z serwerem BlueIris Timelapse Hub.</p>
+                <p>[INFO] Gotowy do operacji na plikach wideo.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- KARTA 3: LISTA WSZYSTKICH LOKALNYCH FILMÓW -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📁 Wszystkie Dostępne Filmy Wideo (Lokalne)</span>
+                <span class="badge badge-blue" id="videoCountBadge">0 filmów</span>
+            </div>
+            <div>
+                <input type="text" id="videoSearchInput" placeholder="Szukaj kamery / pliku..." 
+                       style="background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 6px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85rem;">
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th>Nazwa Pliku</th>
+                        <th>Kamera</th>
+                        <th>Typ</th>
+                        <th>Rozmiar</th>
+                        <th>Data Utworzenia / Modyfikacji</th>
+                        <th>Metadane</th>
+                        <th style="text-align: right;">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody id="videoTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Ładowanie listy filmów...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allVideos = [];
+        let latestVideo = null;
+
+        async function fetchVideos() {
+            try {
+                const res = await fetch('/api/videos');
+                const data = await res.json();
+                allVideos = data.videos || [];
+                renderVideos();
+            } catch (err) {
+                console.error("Błąd pobierania filmów:", err);
+            }
+        }
+
+        async function checkGdriveStatus() {
+            try {
+                const res = await fetch('/api/gdrive/status');
+                const data = await res.json();
+                const task = data.task;
+                if (task) {
+                    document.getElementById('taskStatusText').textContent = `${task.progress_message || task.status}`;
+                    if (task.logs && task.logs.length > 0) {
+                        const term = document.getElementById('logsTerminal');
+                        term.innerHTML = task.logs.map(l => {
+                            if (l.includes("BŁĄD") || l.includes("Error")) return `<p class="err">${l}</p>`;
+                            if (l.includes("pomyślnie") || l.includes("sukcesem")) return `<p class="ok">${l}</p>`;
+                            return `<p>${l}</p>`;
+                        }).join('');
+                        term.scrollTop = term.scrollHeight;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderVideos() {
+            const tableBody = document.getElementById('videoTableBody');
+            const search = document.getElementById('videoSearchInput').value.toLowerCase();
+            document.getElementById('videoCountBadge').textContent = `${allVideos.length} filmów`;
+
+            const filtered = allVideos.filter(v => v.filename.toLowerCase().includes(search) || v.camera.toLowerCase().includes(search));
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Brak plików spełniających kryteria.</td></tr>`;
+                return;
+            }
+
+            // Ustaw najnowszy film
+            if (allVideos.length > 0) {
+                latestVideo = allVideos[0];
+                document.getElementById('metaFilename').textContent = latestVideo.filename;
+                document.getElementById('metaCamera').textContent = latestVideo.camera;
+                document.getElementById('metaSize').textContent = latestVideo.size_formatted;
+                document.getElementById('metaDate').textContent = latestVideo.mtime_formatted;
+                document.getElementById('latestTimeBadge').textContent = latestVideo.mtime_formatted;
+                
+                const player = document.getElementById('mainVideoPlayer');
+                const newSrc = `/api/video/${encodeURIComponent(latestVideo.rel_path)}`;
+                if (!player.src.includes(encodeURIComponent(latestVideo.rel_path))) {
+                    player.src = newSrc;
+                }
+
+                document.getElementById('btnOpenComparator').href = `/comparator?video=${encodeURIComponent(latestVideo.rel_path)}`;
+                if (latestVideo.has_metadata) {
+                    document.getElementById('btnOpenVisualizer').href = `/visualizer?meta=${encodeURIComponent(latestVideo.metadata_file)}`;
+                    document.getElementById('btnOpenVisualizer').style.display = 'inline-flex';
+                } else {
+                    document.getElementById('btnOpenVisualizer').style.display = 'none';
+                }
+            }
+
+            let html = '';
+            filtered.forEach((v, idx) => {
+                const isFirst = (idx === 0);
+                let badgeClass = 'badge-blue';
+                if (v.type === 'DAY') badgeClass = 'badge-green';
+                if (v.type === 'NIGHT') badgeClass = 'badge-purple';
+                if (v.type === 'FULL') badgeClass = 'badge-amber';
+
+                html += `
+                    <tr>
+                        <td>
+                            <strong style="color: #fff;">${v.filename}</strong>
+                            ${isFirst ? '<span class="badge badge-green" style="margin-left: 8px;">NAJNOWSZY</span>' : ''}
+                        </td>
+                        <td><span class="badge badge-blue">${v.camera}</span></td>
+                        <td><span class="badge ${badgeClass}">${v.type}</span></td>
+                        <td style="font-family: \'JetBrains Mono\', monospace;">${v.size_formatted}</td>
+                        <td style="color: var(--text-muted);">${v.mtime_formatted}</td>
+                        <td>
+                            ${v.has_metadata 
+                                ? `<a href="/visualizer?meta=${encodeURIComponent(v.metadata_file)}" style="color: #10b981; text-decoration: none; font-weight: 500;">✓ JSON</a>` 
+                                : `<span style="color: var(--text-dim);">-</span>`}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px;">
+                                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="playInMain('${v.rel_path}', '${v.filename}', '${v.camera}', '${v.size_formatted}', '${v.mtime_formatted}', '${v.metadata_file || ''}')">
+                                    ▶ Odtwórz
+                                </button>
+                                <a href="/comparator?video=${encodeURIComponent(v.rel_path)}" class="btn" style="padding: 6px 12px; font-size: 0.8rem;">
+                                    🔍 Porównaj
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function playInMain(relPath, filename, camera, size, mtime, metaFile) {
+            const player = document.getElementById('mainVideoPlayer');
+            player.src = `/api/video/${encodeURIComponent(relPath)}`;
+            player.play();
+
+            document.getElementById('metaFilename').textContent = filename;
+            document.getElementById('metaCamera').textContent = camera;
+            document.getElementById('metaSize').textContent = size;
+            document.getElementById('metaDate').textContent = mtime;
+            document.getElementById('latestTimeBadge').textContent = mtime;
+            document.getElementById('latestBadge').style.display = (latestVideo && latestVideo.filename === filename) ? 'inline-block' : 'none';
+
+            document.getElementById('btnOpenComparator').href = `/comparator?video=${encodeURIComponent(relPath)}`;
+            if (metaFile) {
+                document.getElementById('btnOpenVisualizer').href = `/visualizer?meta=${encodeURIComponent(metaFile)}`;
+                document.getElementById('btnOpenVisualizer').style.display = 'inline-flex';
+            } else {
+                document.getElementById('btnOpenVisualizer').style.display = 'none';
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('videoSearchInput').addEventListener('input', renderVideos);
+
+        // Akcje pobierania z Google Drive
+        document.getElementById('btnDownloadLatest').addEventListener('click', async () => {
+            const term = document.getElementById('logsTerminal');
+            term.innerHTML += `<p>[INFO] Wysyłanie żądania pobrania najnowszego filmu z Dysku Google...</p>`;
+            try {
+                const res = await fetch('/api/gdrive/download-latest', { method: 'POST' });
+                const data = await res.json();
+                term.innerHTML += `<p class="ok">[START] ${data.message}</p>`;
+                pollTaskStatus();
+            } catch (e) {
+                term.innerHTML += `<p class="err">[BŁĄD] ${e.message}</p>`;
+            }
+        });
+
+        document.getElementById('btnSyncAll').addEventListener('click', async () => {
+            if (!confirm("Czy chcesz rozpocząć synchronizację wszystkich plików wideo z Dyskiem Google?")) return;
+            const term = document.getElementById('logsTerminal');
+            term.innerHTML += `<p>[INFO] Rozpoczynanie synchronizacji rclone...</p>`;
+            try {
+                const res = await fetch('/api/gdrive/sync', { method: 'POST' });
+                const data = await res.json();
+                term.innerHTML += `<p class="ok">[START] ${data.message}</p>`;
+                pollTaskStatus();
+            } catch (e) {
+                term.innerHTML += `<p class="err">[BŁĄD] ${e.message}</p>`;
+            }
+        });
+
+        document.getElementById('btnRefreshList').addEventListener('click', () => {
+            fetchVideos();
+            checkGdriveStatus();
+        });
+
+        let pollInterval = null;
+        function pollTaskStatus() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(async () => {
+                await checkGdriveStatus();
+                await fetchVideos();
+            }, 3000);
+        }
+
+        // Start
+        fetchVideos();
+        checkGdriveStatus();
+    </script>
+</body>
+</html>

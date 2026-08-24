@@ -1,0 +1,11 @@
+﻿.git
+.gitignore
+*.mp4
+*.jpg
+*.jpeg
+JPEG/
+__pycache__/
+*.pyc
+venv/
+.venv/
+LOGS/

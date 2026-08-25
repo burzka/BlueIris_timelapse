@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BlueIris Timelapse Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,12 @@
             --text-dim: #64748b;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             background: radial-gradient(circle at top center, #0e172e 0%, #060912 100%);
@@ -40,6 +45,10 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             padding: 24px 32px;
+            padding-top: max(24px, env(safe-area-inset-top));
+            padding-bottom: max(24px, env(safe-area-inset-bottom));
+            padding-left: max(24px, env(safe-area-inset-left));
+            padding-right: max(24px, env(safe-area-inset-right));
             line-height: 1.5;
         }
 
@@ -467,7 +476,7 @@
             </div>
 
             <div class="video-box">
-                <video id="mainVideoPlayer" controls preload="metadata">
+                <video id="mainVideoPlayer" controls preload="metadata" playsinline webkit-playsinline>
                     Przeglądarka nie obsługuje tagu wideo.
                 </video>
             </div>

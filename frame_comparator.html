@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Porównywarka Klatek Wideo Timelapse - BlueIris</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,40 +15,49 @@
             --bg-input: #1a2234;
             --border-color: #26334d;
             --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.3);
+            --accent-glow: rgba(59, 130, 246, 0.35);
             --accent-green: #10b981;
-            --accent-green-glow: rgba(16, 185, 129, 0.3);
+            --accent-green-glow: rgba(16, 185, 129, 0.35);
             --accent-amber: #f59e0b;
             --accent-purple: #8b5cf6;
+            --accent-purple-glow: rgba(139, 92, 246, 0.35);
             --accent-red: #ef4444;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --text-dim: #6b7280;
+            --touch-target-min: 44px;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background: radial-gradient(circle at top center, #111827 0%, #030712 100%);
             color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 16px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 20px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .logo-title {
@@ -58,40 +67,44 @@
         }
 
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, var(--accent), var(--accent-purple));
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             font-size: 18px;
             box-shadow: 0 0 15px var(--accent-glow);
+            flex-shrink: 0;
         }
 
         h1 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            background: linear-gradient(90deg, #ffffff, #9ca3af);
+            font-size: 1.35rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff, #cbd5e1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.2;
         }
 
         .header-controls {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .file-select-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             background: var(--bg-card);
             padding: 6px 12px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
+            flex-wrap: wrap;
         }
 
         select, input[type="file"], button {
@@ -104,9 +117,11 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             padding: 8px 12px;
+            min-height: 38px;
             border-radius: 6px;
             outline: none;
             cursor: pointer;
+            font-size: 0.9rem;
         }
 
         select:hover {
@@ -118,12 +133,14 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             padding: 8px 14px;
+            min-height: 38px;
             border-radius: 6px;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
             transition: all 0.2s;
+            user-select: none;
         }
 
         .btn-file:hover {
@@ -134,11 +151,11 @@
         .main-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 16px;
             flex: 1;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1024px) {
             .main-layout {
                 grid-template-columns: 1fr;
             }
@@ -147,7 +164,7 @@
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -159,6 +176,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .card-title {
@@ -171,10 +190,13 @@
 
         .badge {
             font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
             font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
@@ -188,7 +210,7 @@
             width: 100%;
             aspect-ratio: 16 / 9;
             background: #000;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
             border: 1px solid var(--border-color);
             display: flex;
@@ -200,16 +222,17 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            background: #000;
         }
 
         /* Controls Panel */
         .controls-panel {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             background: rgba(15, 23, 42, 0.6);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
         }
 
@@ -221,19 +244,31 @@
 
         .time-display {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: var(--text-muted);
-            min-width: 110px;
+            min-width: 120px;
             text-align: center;
+            font-weight: 500;
         }
 
+        /* Touch-friendly range sliders */
         input[type="range"] {
             flex: 1;
-            height: 6px;
-            border-radius: 3px;
+            height: 10px;
+            border-radius: 5px;
             background: var(--border-color);
             accent-color: var(--accent);
             cursor: pointer;
+            touch-action: pan-y;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .btn-grid {
@@ -247,14 +282,19 @@
             background: var(--bg-input);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 8px 14px;
-            border-radius: 6px;
+            padding: 10px 14px;
+            min-height: 42px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 500;
-            display: flex;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             transition: all 0.15s ease;
+            user-select: none;
+            touch-action: manipulation;
         }
 
         .btn:hover {
@@ -264,14 +304,15 @@
         }
 
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(1px);
+            opacity: 0.85;
         }
 
         .btn-primary {
-            background: var(--accent);
+            background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
             color: #fff;
             border-color: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
 
         .btn-primary:hover {
@@ -279,10 +320,10 @@
         }
 
         .btn-active-toggle {
-            background: var(--accent-purple);
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%);
             color: white;
             border-color: var(--accent-purple);
-            box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 14px rgba(139, 92, 246, 0.45);
         }
 
         .btn-frame-a {
@@ -290,7 +331,7 @@
             color: #34d399;
             border-color: rgba(16, 185, 129, 0.4);
         }
-        .btn-frame-a:hover {
+        .btn-frame-a:hover, .btn-frame-a:active {
             background: rgba(16, 185, 129, 0.3);
             border-color: #10b981;
             box-shadow: 0 0 12px var(--accent-green-glow);
@@ -301,7 +342,7 @@
             color: #fbbf24;
             border-color: rgba(245, 158, 11, 0.4);
         }
-        .btn-frame-b:hover {
+        .btn-frame-b:hover, .btn-frame-b:active {
             background: rgba(245, 158, 11, 0.3);
             border-color: #f59e0b;
         }
@@ -312,27 +353,36 @@
             gap: 6px;
             background: var(--bg-input);
             padding: 4px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .mode-tab {
             flex: 1;
-            padding: 6px 10px;
+            padding: 8px 12px;
+            min-height: 38px;
             text-align: center;
             font-size: 0.85rem;
-            border-radius: 6px;
+            font-weight: 500;
+            border-radius: 8px;
             cursor: pointer;
             color: var(--text-muted);
             transition: all 0.2s;
             user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            touch-action: manipulation;
         }
 
         .mode-tab.active {
             background: var(--accent);
             color: white;
             font-weight: 600;
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 12px var(--accent-glow);
         }
 
         .view-canvas-container {
@@ -340,11 +390,12 @@
             width: 100%;
             aspect-ratio: 16 / 9;
             background: #04070d;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
             border: 1px solid var(--border-color);
             cursor: grab;
             user-select: none;
+            touch-action: none; /* Kluczowe dla iPada: wyłącza domyślne przewijanie strony przy dotyku canvasa */
         }
 
         .view-canvas-container.calibration-mode {
@@ -375,20 +426,34 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            display: block;
             pointer-events: none;
+            image-rendering: auto;
         }
 
-        /* Split Curtain Handle Overlay */
+        /* Split Curtain Handle Overlay - Duży, łatwy do złapania palcem uchwyt */
         .curtain-handle {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 3px;
+            width: 4px;
             background: #ffffff;
-            box-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 12px var(--accent);
+            box-shadow: 0 0 10px rgba(0,0,0,0.9), 0 0 16px var(--accent);
             cursor: ew-resize;
             z-index: 10;
+            touch-action: none;
+        }
+
+        /* Rozszerzona strefa dotykowa uchwytu kurtyny (min 48px dla iPada) */
+        .curtain-handle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -24px;
+            right: -24px;
+            background: transparent;
+            cursor: ew-resize;
         }
 
         .curtain-button {
@@ -396,8 +461,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 32px;
-            height: 32px;
+            width: 42px;
+            height: 42px;
             background: #ffffff;
             color: #0b0f19;
             border-radius: 50%;
@@ -405,32 +470,63 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            font-size: 16px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6), 0 0 10px var(--accent-glow);
+            border: 2px solid var(--accent);
+            user-select: none;
+            touch-action: none;
         }
 
         .frame-indicator {
             position: absolute;
             top: 12px;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 5px 12px;
+            border-radius: 8px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.82rem;
+            font-weight: 700;
             z-index: 5;
             backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            pointer-events: none;
         }
 
         .indicator-a {
             left: 12px;
-            background: rgba(16, 185, 129, 0.85);
+            background: rgba(16, 185, 129, 0.9);
             color: white;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .indicator-b {
             right: 12px;
-            background: rgba(245, 158, 11, 0.85);
+            background: rgba(245, 158, 11, 0.9);
             color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .peek-active-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(245, 158, 11, 0.95);
+            color: #000;
+            font-weight: 800;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 12;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            letter-spacing: 0.5px;
+            display: none;
+            pointer-events: none;
+            animation: pulsePeek 1s infinite alternate;
+        }
+
+        @keyframes pulsePeek {
+            from { transform: translateX(-50%) scale(1); }
+            to { transform: translateX(-50%) scale(1.05); }
         }
 
         .calibration-banner {
@@ -438,17 +534,19 @@
             top: 48px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(139, 92, 246, 0.9);
+            background: rgba(139, 92, 246, 0.95);
             color: white;
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 500;
+            font-size: 0.85rem;
+            font-weight: 600;
             z-index: 15;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
             pointer-events: none;
             display: none;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            text-align: center;
+            max-width: 90%;
         }
 
         .fullscreen-exit-btn {
@@ -456,14 +554,17 @@
             bottom: 16px;
             right: 16px;
             z-index: 20;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             color: #fff;
             border: 1px solid var(--border-color);
-            padding: 8px 14px;
-            border-radius: 6px;
+            padding: 10px 16px;
+            min-height: 44px;
+            border-radius: 8px;
             cursor: pointer;
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(8px);
             display: none;
+            font-weight: 600;
+            font-size: 0.88rem;
         }
 
         .zoom-controls {
@@ -471,10 +572,11 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 8px 12px;
+            padding: 10px 14px;
             background: rgba(15, 23, 42, 0.6);
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
+            flex-wrap: wrap;
         }
 
         .zoom-info {
@@ -483,11 +585,50 @@
             color: var(--text-muted);
         }
 
+        /* Pasek szybkiego porównywania dla iPad / ekranów dotykowych */
+        .touch-quick-bar {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 12px;
+            align-items: center;
+            justify-content: stretch;
+            flex-wrap: wrap;
+        }
+
+        .btn-touch-action {
+            flex: 1;
+            min-height: 48px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .btn-hold-peek {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.35) 100%);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+        }
+        .btn-hold-peek:active, .btn-hold-peek.active {
+            background: rgba(245, 158, 11, 0.9);
+            color: #000;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+        }
+
         /* Panel Kalibracji Wyrównania */
         .calibration-panel {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 12px;
             display: flex;
             flex-direction: column;
@@ -498,6 +639,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .points-list {
@@ -513,18 +656,18 @@
             align-items: center;
             justify-content: space-between;
             background: var(--bg-input);
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             border: 1px solid var(--border-color);
         }
 
         .point-tag {
             font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.78rem;
         }
 
         .tag-a { background: rgba(16, 185, 129, 0.2); color: #34d399; }
@@ -535,8 +678,13 @@
             color: var(--accent-red);
             border: none;
             cursor: pointer;
-            font-size: 0.9rem;
-            padding: 2px 6px;
+            font-size: 1rem;
+            padding: 6px 10px;
+            min-height: 36px;
+            min-width: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-del-point:hover {
@@ -545,13 +693,13 @@
 
         .shortcut-hint {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             flex-wrap: wrap;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: var(--text-muted);
             background: var(--bg-card);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
             margin-top: 10px;
         }
@@ -609,8 +757,8 @@
                 <div class="time-display" id="timeDisplay">00:00.00 / 00:00.00</div>
             </div>
 
-            <div class="media-container">
-                <video id="videoPlayer" preload="auto" crossorigin="anonymous"></video>
+            <div class="media-container" id="videoContainer">
+                <video id="videoPlayer" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></video>
             </div>
 
             <div class="controls-panel">
@@ -628,12 +776,12 @@
                     <button class="btn" id="btnStepForward5s" title="Do przodu o 5 sekund">+5s ⏭️</button>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 6px;">
-                    <button class="btn btn-frame-a" id="btnCaptureA" style="flex: 1;">
-                        📌 Zapisz jako Klatkę A (Wiosna/Początek) <kbd>A</kbd>
+                <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap;">
+                    <button class="btn btn-frame-a" id="btnCaptureA" style="flex: 1; min-height: 46px;">
+                        📌 Zapisz jako Klatkę A <kbd>A</kbd>
                     </button>
-                    <button class="btn btn-frame-b" id="btnCaptureB" style="flex: 1;">
-                        📌 Zapisz jako Klatkę B (Zima/Koniec) <kbd>B</kbd>
+                    <button class="btn btn-frame-b" id="btnCaptureB" style="flex: 1; min-height: 46px;">
+                        📌 Zapisz jako Klatkę B <kbd>B</kbd>
                     </button>
                 </div>
             </div>
@@ -646,10 +794,10 @@
                     <span>🔬 Porównywarka i Kalibrator</span>
                     <span class="badge badge-purple" id="alignStatusBadge">Kalibracja: Wyłączona</span>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn" id="btnFullscreen" style="padding: 4px 10px; font-size: 0.8rem;">🖥️ Pełny ekran <kbd>F</kbd></button>
-                    <button class="btn" id="btnResetZoom" style="padding: 4px 10px; font-size: 0.8rem;">🔍 Reset Zoom</button>
-                    <button class="btn" id="btnExportImage" style="padding: 4px 10px; font-size: 0.8rem;">💾 Pobierz Obraz</button>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn" id="btnFullscreen" style="padding: 6px 12px; font-size: 0.82rem;">🖥️ Pełny ekran <kbd>F</kbd></button>
+                    <button class="btn" id="btnResetZoom" style="padding: 6px 12px; font-size: 0.82rem;">🔍 Reset Zoom</button>
+                    <button class="btn" id="btnExportImage" style="padding: 6px 12px; font-size: 0.82rem;">💾 Pobierz HD</button>
                 </div>
             </div>
 
@@ -664,12 +812,13 @@
             <div class="view-canvas-container" id="canvasContainer">
                 <div class="frame-indicator indicator-a" id="indicatorA">Klatka A: Nie wybrano</div>
                 <div class="frame-indicator indicator-b" id="indicatorB">Klatka B: Nie wybrano</div>
+                <div class="peek-active-badge" id="peekActiveBadge">👁️ PODEJRZENIE KLATKI B</div>
 
                 <div class="calibration-banner" id="calibrationBanner">
                     🎯 Kliknij nieruchomy punkt na Klatce A [Pkt #1], a potem ten sam punkt na Klatce B
                 </div>
 
-                <!-- Kurtyna do suwaka dzielonego -->
+                <!-- Kurtyna do suwaka dzielonego z rozszerzonym uchwytem dotykowym -->
                 <div class="curtain-handle" id="curtainHandle" style="display: none; left: 50%;">
                     <div class="curtain-button">↔</div>
                 </div>
@@ -679,16 +828,29 @@
                 <canvas id="compCanvas"></canvas>
             </div>
 
+            <!-- Pasek szybkiego porównywania dla iPad / ekranów dotykowych -->
+            <div class="touch-quick-bar" id="touchQuickBar">
+                <button class="btn btn-touch-action btn-primary" id="btnTouchToggle">
+                    🔄 Przełącz A ↔ B
+                </button>
+                <button class="btn btn-touch-action btn-hold-peek" id="btnHoldPeek">
+                    👁️ Przytrzymaj dla B (Peek)
+                </button>
+                <button class="btn btn-touch-action" id="btnTouchResetZoom" style="flex: 0 0 auto; min-width: 80px;">
+                    🔍 100%
+                </button>
+            </div>
+
             <div class="zoom-controls">
                 <div class="zoom-info" id="zoomInfo">Powiększenie: 100% | Pozycja: (0, 0)</div>
-                <div id="extraControls" style="display: flex; align-items: center; gap: 10px;">
+                <div id="extraControls" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <!-- Pokazywane w trybie Opacity -->
-                    <div id="opacitySliderGroup" style="display: none; align-items: center; gap: 6px;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Przezroczystość B:</span>
-                        <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="0.5" style="width: 120px;">
+                    <div id="opacitySliderGroup" style="display: none; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">Przenikanie B:</span>
+                        <input type="range" id="opacitySlider" min="0" max="1" step="0.01" value="0.5" style="width: 140px;">
                     </div>
                     <!-- Pokazywane w trybie Toggle -->
-                    <button class="btn btn-primary" id="btnToggleAB" style="padding: 4px 12px; font-size: 0.85rem;">
+                    <button class="btn btn-primary" id="btnToggleAB" style="padding: 6px 14px; font-size: 0.88rem;">
                         Przełącz A ↔ B <kbd>Spacja</kbd>
                     </button>
                 </div>
@@ -697,7 +859,7 @@
             <!-- Panel Kalibracji / Wyrównania Klatek -->
             <div class="calibration-panel">
                 <div class="calibration-header">
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <button class="btn" id="btnToggleCalibration" style="font-size: 0.85rem;">
                             🎯 Tryb Stawiania Punktów Kontrolnych <kbd>C</kbd>
                         </button>
@@ -705,7 +867,7 @@
                             <input type="checkbox" id="chkEnableAlignment" checked> Włącz wyrównywanie Klatki B do A
                         </label>
                     </div>
-                    <button class="btn" id="btnClearPoints" style="padding: 4px 10px; font-size: 0.8rem; color: var(--accent-red);">
+                    <button class="btn" id="btnClearPoints" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-red);">
                         🗑️ Usuń Wszystkie Punkty
                     </button>
                 </div>
@@ -720,19 +882,21 @@
     </div>
 
     <div class="shortcut-hint">
-        <div>💡 <strong>Skróty klawiszowe i mysz:</strong></div>
-        <div><kbd>A</kbd> Ustaw Klatkę A</div>
-        <div><kbd>B</kbd> Ustaw Klatkę B</div>
-        <div><kbd>Spacja</kbd> / <kbd>Tab</kbd> Przełącz Klatkę A/B</div>
-        <div><kbd>C</kbd> Włącz/Wyłącz Tryb Edycji Punktów</div>
-        <div><kbd>F</kbd> Tryb Pełnoekranowy (Fullscreen)</div>
-        <div><kbd>Środkowy / Prawy Przycisk Myszy</kbd> Przesuwanie Obrazu (Pan)</div>
-        <div><kbd>Kółko myszy</kbd> Zoom w punkcie kursora</div>
+        <div>💡 <strong>Sterowanie i gesty (iPad & PC):</strong></div>
+        <div>📱 <strong>Pinch-to-zoom:</strong> Szczypanie 2 palcami do powiększania</div>
+        <div>👆 <strong>Dotyk:</strong> 1 palec przesuwa obraz (Pan) / Stuknięcie przełącza A↔B</div>
+        <div>👁️ <strong>Hold to Peek:</strong> Przytrzymaj przycisk, aby podejrzeć klatkę</div>
+        <div><kbd>A</kbd> Klatka A</div>
+        <div><kbd>B</kbd> Klatka B</div>
+        <div><kbd>Spacja</kbd> / <kbd>Tab</kbd> Przełącz A/B</div>
+        <div><kbd>C</kbd> Kalibracja punktów</div>
+        <div><kbd>F</kbd> Pełny ekran</div>
     </div>
 
     <script>
         // Elementy DOM
         const videoPlayer = document.getElementById('videoPlayer');
+        const videoContainer = document.getElementById('videoContainer');
         const videoFileInput = document.getElementById('videoFileInput');
         const presetVideoSelect = document.getElementById('presetVideoSelect');
         const btnLoadPreset = document.getElementById('btnLoadPreset');
@@ -752,6 +916,7 @@
         const btnCaptureB = document.getElementById('btnCaptureB');
         const indicatorA = document.getElementById('indicatorA');
         const indicatorB = document.getElementById('indicatorB');
+        const peekActiveBadge = document.getElementById('peekActiveBadge');
 
         const compCanvas = document.getElementById('compCanvas');
         const ctx = compCanvas.getContext('2d');
@@ -759,6 +924,9 @@
         const curtainHandle = document.getElementById('curtainHandle');
         const modeTabs = document.querySelectorAll('.mode-tab');
         const btnToggleAB = document.getElementById('btnToggleAB');
+        const btnTouchToggle = document.getElementById('btnTouchToggle');
+        const btnHoldPeek = document.getElementById('btnHoldPeek');
+        const btnTouchResetZoom = document.getElementById('btnTouchResetZoom');
         const opacitySliderGroup = document.getElementById('opacitySliderGroup');
         const opacitySlider = document.getElementById('opacitySlider');
         const zoomInfo = document.getElementById('zoomInfo');
@@ -783,6 +951,7 @@
 
         let activeMode = 'toggle'; // 'toggle', 'split', 'blend', 'side'
         let activeToggleFrame = 'A'; // 'A' lub 'B'
+        let isPeeking = false; // Czy przytrzymywany jest przycisk "Hold to Peek"
         let splitRatio = 0.5; // 0.0 do 1.0 dla curtain
         let isDraggingCurtain = false;
 
@@ -795,7 +964,14 @@
         let startPanY = 0;
         let panStartX = 0;
         let panStartY = 0;
-        let hasPanned = false; // Flaga wykrywająca przesunięcie obrazu myszą
+        let hasPanned = false; // Flaga wykrywająca przesunięcie obrazu myszą / palcem
+
+        // Stan Dotyku (Touch & Multi-touch / Pinch)
+        let initialPinchDistance = null;
+        let initialPinchScale = 1.0;
+        let initialPinchCenter = { x: 0, y: 0 };
+        let touchStartTime = 0;
+        let touchStartPos = { x: 0, y: 0 };
 
         // Stan Kalibracji Klatek
         let isCalibrationActive = false;
@@ -939,7 +1115,7 @@
         btnStepForward1s.addEventListener('click', () => stepTime(1));
         btnStepForward5s.addEventListener('click', () => stepTime(5));
 
-        // Przechwytywanie Klatek A i B
+        // Przechwytywanie Klatek A i B w pełnej natywnej rozdzielczości źródła (HD / 4K)
         function captureFrame(type) {
             if (!videoPlayer.videoWidth) return;
 
@@ -947,6 +1123,8 @@
             offCanvas.width = videoPlayer.videoWidth;
             offCanvas.height = videoPlayer.videoHeight;
             const offCtx = offCanvas.getContext('2d');
+            offCtx.imageSmoothingEnabled = true;
+            offCtx.imageSmoothingQuality = 'high';
             offCtx.drawImage(videoPlayer, 0, 0, offCanvas.width, offCanvas.height);
 
             if (type === 'A') {
@@ -979,11 +1157,45 @@
         function updateModeUI() {
             curtainHandle.style.display = (activeMode === 'split') ? 'block' : 'none';
             opacitySliderGroup.style.display = (activeMode === 'blend') ? 'flex' : 'none';
-            btnToggleAB.style.display = (activeMode === 'toggle') ? 'block' : 'none';
+            btnToggleAB.style.display = (activeMode === 'toggle') ? 'inline-flex' : 'none';
         }
 
-        btnToggleAB.addEventListener('click', () => {
+        function toggleFrames() {
             activeToggleFrame = (activeToggleFrame === 'A') ? 'B' : 'A';
+            renderComparison();
+        }
+
+        btnToggleAB.addEventListener('click', toggleFrames);
+        btnTouchToggle.addEventListener('click', toggleFrames);
+
+        // Obsługa przycisku "Hold to Peek B" (Przytrzymaj, aby podejrzeć)
+        function startPeek(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            isPeeking = true;
+            btnHoldPeek.classList.add('active');
+            renderComparison();
+        }
+
+        function stopPeek(e) {
+            if (isPeeking) {
+                isPeeking = false;
+                btnHoldPeek.classList.remove('active');
+                renderComparison();
+            }
+        }
+
+        btnHoldPeek.addEventListener('pointerdown', startPeek);
+        btnHoldPeek.addEventListener('pointerup', stopPeek);
+        btnHoldPeek.addEventListener('pointercancel', stopPeek);
+        btnHoldPeek.addEventListener('pointerleave', stopPeek);
+
+        btnTouchResetZoom.addEventListener('click', () => {
+            zoomScale = 1.0;
+            panX = 0;
+            panY = 0;
             renderComparison();
         });
 
@@ -991,7 +1203,7 @@
 
         // Obsługa Pełnego Ekranu (Fullscreen)
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (canvasContainer.requestFullscreen) {
                     canvasContainer.requestFullscreen();
                 } else if (canvasContainer.webkitRequestFullscreen) {
@@ -1000,6 +1212,8 @@
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
                 }
             }
         }
@@ -1007,14 +1221,14 @@
         btnFullscreen.addEventListener('click', toggleFullscreen);
         fullscreenExitBtn.addEventListener('click', toggleFullscreen);
 
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) {
-                fullscreenExitBtn.style.display = 'block';
-            } else {
-                fullscreenExitBtn.style.display = 'none';
-            }
-            setTimeout(resizeCanvas, 50);
-        });
+        const handleFullscreenChange = () => {
+            const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            fullscreenExitBtn.style.display = isFull ? 'block' : 'none';
+            setTimeout(resizeCanvas, 60);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
         // ----------------------------------------------------
         // LOGIKA KALIBRACJI / DOPASOWANIA AFINICZNEGO KLATEK
@@ -1051,13 +1265,13 @@
                     activeToggleFrame = 'A';
                     renderComparison();
                 }
-                calibrationBanner.textContent = `🎯 KROK 1: Kliknij Punkt #${nextIdx} na Klatce A (Środkowy/Prawy klawisz = przesuwanie obrazu)`;
+                calibrationBanner.textContent = `🎯 KROK 1: Dotknij / Kliknij Punkt #${nextIdx} na Klatce A (Przesuń 2 palcami by nawigować)`;
             } else {
                 if (activeMode === 'toggle' && activeToggleFrame !== 'B') {
                     activeToggleFrame = 'B';
                     renderComparison();
                 }
-                calibrationBanner.textContent = `🎯 KROK 2: Kliknij ten sam Punkt #${nextIdx} na Klatce B (Środkowy/Prawy klawisz = przesuwanie obrazu)`;
+                calibrationBanner.textContent = `🎯 KROK 2: Dotknij / Kliknij ten sam Punkt #${nextIdx} na Klatce B`;
             }
         }
 
@@ -1088,7 +1302,6 @@
         }
 
         function updateCalibrationUI() {
-            // Aktualizacja Badge Statusu
             if (calibrationPairs.length === 0) {
                 alignStatusBadge.textContent = 'Kalibracja: Wyłączona (0 punktów)';
                 alignStatusBadge.className = 'badge badge-purple';
@@ -1103,14 +1316,14 @@
                 alignStatusBadge.className = 'badge badge-green';
             }
 
-            // Lista Punktów
             if (calibrationPairs.length === 0) {
                 pointsListContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 6px;">Brak punktów kalibracyjnych. Kliknij "Tryb Stawiania Punktów", aby wyrównać przesunięcie kamery.</div>`;
                 return;
             }
 
-            const w = compCanvas.width || 1920;
-            const h = compCanvas.height || 1080;
+            const rect = canvasContainer.getBoundingClientRect();
+            const w = rect.width || 1920;
+            const h = rect.height || 1080;
 
             let html = '';
             calibrationPairs.forEach((p, idx) => {
@@ -1138,7 +1351,6 @@
                 return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
             }
 
-            // 1 Punkt: Czysta Translacja (Shift)
             if (pairs.length === 1) {
                 const p = pairs[0];
                 const dx = (p.ax - p.bx) * width;
@@ -1146,7 +1358,6 @@
                 return { a: 1, b: 0, c: 0, d: 1, e: dx, f: dy };
             }
 
-            // 2 Punkty: Skala + Obrót + Translacja (Similarity Transform)
             if (pairs.length === 2) {
                 const p1 = pairs[0], p2 = pairs[1];
                 const bx1 = p1.bx * width, by1 = p1.by * height;
@@ -1171,7 +1382,6 @@
                 return { a: s_cos, b: s_sin, c: -s_sin, d: s_cos, e: e, f: f };
             }
 
-            // 3+ Punkty: Dopasowanie Afiniczne Metodą Najmniejszych Kwadratów (Least-Squares Affine Matrix)
             let SumBx2 = 0, SumBy2 = 0, SumBxBy = 0, SumBx = 0, SumBy = 0, N = pairs.length;
             let SumAxBx = 0, SumAxBy = 0, SumAx = 0;
             let SumAyBx = 0, SumAyBy = 0, SumAy = 0;
@@ -1237,8 +1447,7 @@
                 toggleFullscreen();
             } else if (e.code === 'Space' || e.key === 'Tab') {
                 e.preventDefault();
-                activeToggleFrame = (activeToggleFrame === 'A') ? 'B' : 'A';
-                renderComparison();
+                toggleFrames();
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 stepTime(e.shiftKey ? -1 : -FRAME_TIME);
@@ -1248,25 +1457,50 @@
             }
         });
 
-        // Dostosowanie Rozmiaru Canvasa
+        // ---------------------------------------------------------------------------------
+        // RETINA / HIGH-DPI CANVAS RESIZE (Naprawa jakości obrazu na iPadzie i ekranach 4K)
+        // ---------------------------------------------------------------------------------
         function resizeCanvas() {
             const rect = canvasContainer.getBoundingClientRect();
-            compCanvas.width = rect.width;
-            compCanvas.height = rect.height;
+            if (rect.width === 0 || rect.height === 0) return;
+
+            // Używamy devicePixelRatio (z ograniczeniem do 3x dla wydajności pamięci iPada)
+            const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+            compCanvas.width = Math.round(rect.width * dpr);
+            compCanvas.height = Math.round(rect.height * dpr);
+            compCanvas.style.width = `${rect.width}px`;
+            compCanvas.style.height = `${rect.height}px`;
+
             renderComparison();
         }
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
 
-        // Renderowanie Porównania i Nakładek Kalibracji
+        // ---------------------------------------------------------------------------------
+        // RENDEROWANIE PORÓWNANIA Z ZACHOWANIEM MAKSYMALNEJ OSTROŚCI (HD / 4K / RETINA)
+        // ---------------------------------------------------------------------------------
         function renderComparison() {
+            const rect = canvasContainer.getBoundingClientRect();
+            const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+            const w = rect.width;
+            const h = rect.height;
+
+            if (w === 0 || h === 0) return;
+
+            // Reset macierzy transformacji bufora fizycznego
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, compCanvas.width, compCanvas.height);
 
-            const w = compCanvas.width;
-            const h = compCanvas.height;
+            // Włączenie wygładzania o najwyższej jakości
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            // Skalowanie jednostek kontekstu o dpr - wszystkie współrzędne w logice to piksele CSS
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
             if (!frameA && !frameB) {
-                ctx.fillStyle = '#6b7280';
-                ctx.font = '16px Outfit';
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '500 16px Outfit, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText('Wybierz wideo i zapisz Klatkę A oraz Klatkę B do porównania', w / 2, h / 2);
                 return;
@@ -1286,10 +1520,20 @@
                 context.transform(alignM.a, alignM.b, alignM.c, alignM.d, alignM.e, alignM.f);
             }
 
+            // Ustalenie wyświetlanej klatki (uwzględnia tryb Hold to Peek)
+            let currentFrame = activeToggleFrame;
+            if (isPeeking) {
+                currentFrame = (activeToggleFrame === 'A') ? 'B' : 'A';
+                peekActiveBadge.style.display = 'block';
+                peekActiveBadge.textContent = `👁️ PODEJRZENIE KLATKI ${currentFrame}`;
+            } else {
+                peekActiveBadge.style.display = 'none';
+            }
+
             if (activeMode === 'toggle') {
                 ctx.save();
                 applyZoomTransform(ctx);
-                if (activeToggleFrame === 'A') {
+                if (currentFrame === 'A') {
                     if (frameA) ctx.drawImage(frameA, 0, 0, w, h);
                 } else {
                     if (frameB) {
@@ -1383,8 +1627,8 @@
                 // Linia łącząca przesunięcie A -> B
                 ctx.beginPath();
                 ctx.setLineDash([4, 4]);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-                ctx.lineWidth = 1.5 / zoomScale;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 2 / zoomScale;
                 ctx.moveTo(ax, ay);
                 ctx.lineTo(bx, by);
                 ctx.stroke();
@@ -1408,29 +1652,31 @@
         }
 
         function drawMarker(x, y, label, color) {
-            const r = 8 / zoomScale;
+            const r = Math.max(7, 9 / zoomScale);
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.fillStyle = color;
             ctx.fill();
-            ctx.lineWidth = 2 / zoomScale;
+            ctx.lineWidth = Math.max(1.5, 2.5 / zoomScale);
             ctx.strokeStyle = '#ffffff';
             ctx.stroke();
 
             // Celownik
             ctx.beginPath();
-            ctx.moveTo(x - r * 1.5, y); ctx.lineTo(x + r * 1.5, y);
-            ctx.moveTo(x, y - r * 1.5); ctx.lineTo(x, y + r * 1.5);
+            ctx.moveTo(x - r * 1.6, y); ctx.lineTo(x + r * 1.6, y);
+            ctx.moveTo(x, y - r * 1.6); ctx.lineTo(x, y + r * 1.6);
             ctx.strokeStyle = color;
+            ctx.lineWidth = Math.max(1.5, 2 / zoomScale);
             ctx.stroke();
 
             // Etykieta
-            ctx.font = `${Math.max(10, 12 / zoomScale)}px JetBrains Mono`;
+            const fontSize = Math.max(12, Math.round(13 / zoomScale));
+            ctx.font = `600 ${fontSize}px JetBrains Mono, monospace`;
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
-            ctx.shadowColor = 'black';
-            ctx.shadowBlur = 4;
-            ctx.fillText(label, x + r + 4, y + 4);
+            ctx.shadowColor = 'rgba(0,0,0,0.9)';
+            ctx.shadowBlur = 5;
+            ctx.fillText(label, x + r + 5, y + 4);
             ctx.shadowBlur = 0;
         }
 
@@ -1441,22 +1687,163 @@
             }
         });
 
-        // Obsługa kliknięć na Canvas w Trybie Kalibracji (Pkt stawiany TYLKO lewym przyciskiem myszy)
+        // ---------------------------------------------------------------------------------
+        // OBSŁUGA PRZECIĄGANIA KURTYNY (POINTER EVENTS - Mysz + Dotyk)
+        // ---------------------------------------------------------------------------------
+        function updateCurtainFromClientX(clientX) {
+            const rect = canvasContainer.getBoundingClientRect();
+            let x = clientX - rect.left;
+            x = Math.max(0, Math.min(rect.width, x));
+            splitRatio = x / rect.width;
+            renderComparison();
+        }
+
+        curtainHandle.addEventListener('pointerdown', (e) => {
+            isDraggingCurtain = true;
+            try { curtainHandle.setPointerCapture(e.pointerId); } catch(err){}
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        curtainHandle.addEventListener('pointermove', (e) => {
+            if (isDraggingCurtain) {
+                updateCurtainFromClientX(e.clientX);
+                e.preventDefault();
+            }
+        });
+
+        const endCurtainDrag = (e) => {
+            if (isDraggingCurtain) {
+                isDraggingCurtain = false;
+                try { curtainHandle.releasePointerCapture(e.pointerId); } catch(err){}
+            }
+        };
+
+        curtainHandle.addEventListener('pointerup', endCurtainDrag);
+        curtainHandle.addEventListener('pointercancel', endCurtainDrag);
+
+        // ---------------------------------------------------------------------------------
+        // OBSŁUGA GESTÓW DOTYKOWYCH (iPad Touch & Pinch-to-zoom)
+        // ---------------------------------------------------------------------------------
+        function getTouchDistance(t1, t2) {
+            return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        }
+
+        function getTouchCenter(t1, t2) {
+            const rect = canvasContainer.getBoundingClientRect();
+            return {
+                x: (t1.clientX + t2.clientX) / 2 - rect.left,
+                y: (t1.clientY + t2.clientY) / 2 - rect.top
+            };
+        }
+
+        canvasContainer.addEventListener('touchstart', (e) => {
+            if (e.target === curtainHandle || curtainHandle.contains(e.target) || e.target === fullscreenExitBtn) return;
+
+            hasPanned = false;
+            touchStartTime = Date.now();
+
+            if (e.touches.length === 2) {
+                // Początek gestu Pinch-to-zoom
+                e.preventDefault();
+                initialPinchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                initialPinchScale = zoomScale;
+                initialPinchCenter = getTouchCenter(e.touches[0], e.touches[1]);
+                isPanning = false;
+            } else if (e.touches.length === 1) {
+                // Początek dotknięcia 1 palcem
+                const t = e.touches[0];
+                touchStartPos = { x: t.clientX, y: t.clientY };
+                startPanX = t.clientX - panX;
+                startPanY = t.clientY - panY;
+                panStartX = t.clientX;
+                panStartY = t.clientY;
+                isPanning = true;
+            }
+        }, { passive: false });
+
+        canvasContainer.addEventListener('touchmove', (e) => {
+            if (e.target === curtainHandle || curtainHandle.contains(e.target)) return;
+
+            if (e.touches.length === 2 && initialPinchDistance) {
+                // Trwa Pinch-to-zoom dwoma palcami
+                e.preventDefault();
+                const dist = getTouchDistance(e.touches[0], e.touches[1]);
+                const center = getTouchCenter(e.touches[0], e.touches[1]);
+                const scaleFactor = dist / initialPinchDistance;
+                const newScale = Math.max(0.8, Math.min(10.0, initialPinchScale * scaleFactor));
+
+                const rect = canvasContainer.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                const cx = center.x - w / 2;
+                const cy = center.y - h / 2;
+
+                panX = cx - (cx - panX) * (newScale / zoomScale);
+                panY = cy - (cy - panY) * (newScale / zoomScale);
+                zoomScale = newScale;
+
+                hasPanned = true;
+                renderComparison();
+            } else if (e.touches.length === 1 && isPanning) {
+                // Przesuwanie (Pan) 1 palcem
+                const t = e.touches[0];
+                const dist = Math.hypot(t.clientX - panStartX, t.clientY - panStartY);
+                if (dist > 6) {
+                    hasPanned = true;
+                }
+                panX = t.clientX - startPanX;
+                panY = t.clientY - startPanY;
+                renderComparison();
+            }
+        }, { passive: false });
+
+        canvasContainer.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                initialPinchDistance = null;
+            }
+            if (e.touches.length === 0) {
+                const touchDuration = Date.now() - touchStartTime;
+                isPanning = false;
+
+                // Wykrycie krótkiego tapnięcia (stuknięcia palcem) bez przesunięcia kadru
+                if (!hasPanned && touchDuration < 300) {
+                    const rect = canvasContainer.getBoundingClientRect();
+                    const touchX = touchStartPos.x - rect.left;
+                    const touchY = touchStartPos.y - rect.top;
+
+                    const w = rect.width;
+                    const h = rect.height;
+
+                    if (isCalibrationActive) {
+                        const imgX = (touchX - (w / 2 + panX)) / zoomScale + w / 2;
+                        const imgY = (touchY - (h / 2 + panY)) / zoomScale + h / 2;
+                        const normX = Math.max(0, Math.min(1, imgX / w));
+                        const normY = Math.max(0, Math.min(1, imgY / h));
+                        addCalibrationClick(normX, normY);
+                    } else if (activeMode === 'toggle') {
+                        // Szybkie przełączenie A/B po tapnięciu na obraz
+                        toggleFrames();
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------------------------------
+        // OBSŁUGA MYSZY (Desktop fallback)
+        // ---------------------------------------------------------------------------------
         canvasContainer.addEventListener('click', (e) => {
             if (!isCalibrationActive) return;
             if (e.target === curtainHandle || curtainHandle.contains(e.target) || e.target === fullscreenExitBtn) return;
-            
-            // Punkt stawiany TYLKO lewym przyciskiem myszy (button === 0) i tylko jeśli nie przesuwano kadru (hasPanned === false)
             if (e.button !== 0 || hasPanned) return;
 
             const rect = canvasContainer.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            const w = compCanvas.width;
-            const h = compCanvas.height;
+            const w = rect.width;
+            const h = rect.height;
 
-            // Odwrócenie transformacji Zoom & Pan
             const imgX = (mouseX - (w / 2 + panX)) / zoomScale + w / 2;
             const imgY = (mouseY - (h / 2 + panY)) / zoomScale + h / 2;
 
@@ -1466,17 +1853,9 @@
             addCalibrationClick(normX, normY);
         });
 
-        // Obsługa Przeciągania Kurtyny (Curtain Handle)
-        curtainHandle.addEventListener('mousedown', (e) => {
-            isDraggingCurtain = true;
-            e.stopPropagation();
-        });
-
-        // Panowanie Obrazu (Mysz: Środkowy przycisk, Prawy przycisk lub Lewy w trybie nie-kalibracyjnym)
         canvasContainer.addEventListener('mousedown', (e) => {
             if (e.target === curtainHandle || curtainHandle.contains(e.target) || e.target === fullscreenExitBtn) return;
 
-            // Zawsze resetuj flagę przesuwania obrazu przy nowym naciśnięciu dowolnego przycisku myszy
             hasPanned = false;
             panStartX = e.clientX;
             panStartY = e.clientY;
@@ -1492,13 +1871,7 @@
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (isDraggingCurtain) {
-                const rect = canvasContainer.getBoundingClientRect();
-                let x = e.clientX - rect.left;
-                x = Math.max(0, Math.min(rect.width, x));
-                splitRatio = x / rect.width;
-                renderComparison();
-            } else if (isPanning) {
+            if (isPanning) {
                 const dist = Math.hypot(e.clientX - panStartX, e.clientY - panStartY);
                 if (dist > 4) {
                     hasPanned = true;
@@ -1510,11 +1883,10 @@
         });
 
         window.addEventListener('mouseup', () => {
-            isDraggingCurtain = false;
             isPanning = false;
         });
 
-        // Powiększanie w punkcie kursora (Zoom at Cursor)
+        // Powiększanie w punkcie kursora myszy
         canvasContainer.addEventListener('wheel', (e) => {
             e.preventDefault();
             const rect = canvasContainer.getBoundingClientRect();
@@ -1525,8 +1897,8 @@
             const oldScale = zoomScale;
             let newScale = Math.max(0.8, Math.min(10.0, zoomScale * zoomFactor));
 
-            const w = compCanvas.width;
-            const h = compCanvas.height;
+            const w = rect.width;
+            const h = rect.height;
             const cx = mouseX - w / 2;
             const cy = mouseY - h / 2;
 
@@ -1548,18 +1920,39 @@
             zoomInfo.textContent = `Powiększenie: ${Math.round(zoomScale * 100)}% | Pozycja: (${Math.round(panX)}, ${Math.round(panY)})`;
         }
 
-        // Pobieranie Zrzutu Ekranu z Porównaniem
+        // Pobieranie Zrzutu Ekranu w pełnej jakości HD
         btnExportImage.addEventListener('click', () => {
+            // Jeśli mamy klatki, renderujemy canvas w maksymalnej natywnej rozdzielczości klatki
+            const exportCanvas = document.createElement('canvas');
+            const targetW = (frameA ? frameA.width : (frameB ? frameB.width : compCanvas.width)) || 1920;
+            const targetH = (frameA ? frameA.height : (frameB ? frameB.height : compCanvas.height)) || 1080;
+
+            exportCanvas.width = targetW;
+            exportCanvas.height = targetH;
+            const expCtx = exportCanvas.getContext('2d');
+            expCtx.imageSmoothingEnabled = true;
+            expCtx.imageSmoothingQuality = 'high';
+
+            // Klatka A lub B w zależności od trybu
+            if (activeMode === 'toggle') {
+                const cur = isPeeking ? (activeToggleFrame === 'A' ? 'B' : 'A') : activeToggleFrame;
+                if (cur === 'A' && frameA) expCtx.drawImage(frameA, 0, 0, targetW, targetH);
+                else if (frameB) expCtx.drawImage(frameB, 0, 0, targetW, targetH);
+            } else {
+                // Rysujemy zawartość compCanvas
+                expCtx.drawImage(compCanvas, 0, 0, targetW, targetH);
+            }
+
             const link = document.createElement('a');
-            link.download = `porownanie_${Date.now()}.png`;
-            link.href = compCanvas.toDataURL('image/png');
+            link.download = `porownanie_hd_${Date.now()}.png`;
+            link.href = exportCanvas.toDataURL('image/png');
             link.click();
         });
 
         // Inicjalizacja widoku
         updateModeUI();
         updateCalibrationUI();
-        resizeCanvas();
+        setTimeout(resizeCanvas, 50);
     </script>
 </body>
 </html>

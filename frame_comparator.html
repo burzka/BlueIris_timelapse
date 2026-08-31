@@ -1275,7 +1275,16 @@
             }
         }
 
+        let lastTouchHandledTime = 0;
+        let lastCalibrationClickTime = 0;
+
         function addCalibrationClick(normX, normY) {
+            const now = Date.now();
+            if (now - lastCalibrationClickTime < 250) {
+                return;
+            }
+            lastCalibrationClickTime = now;
+
             if (!pendingPointA) {
                 pendingPointA = { ax: normX, ay: normY };
                 updateCalibrationBannerText();
@@ -1611,73 +1620,108 @@
             updateZoomInfo();
         }
 
-        // Rysowanie tarcz i linii punktów kontrolnych na Canvasie
+        // Konwersja współrzędnych znormalizowanych [0, 1] do współrzędnych ekranu CSS px
+        function toScreenCoord(normX, normY, w, h) {
+            const imgX = normX * w;
+            const imgY = normY * h;
+            const screenX = (imgX - w / 2) * zoomScale + (w / 2 + panX);
+            const screenY = (imgY - h / 2) * zoomScale + (h / 2 + panY);
+            return { x: screenX, y: screenY };
+        }
+
+        // Rysowanie tarcz i linii punktów kontrolnych na Canvasie (stały, precyzyjny rozmiar)
         function renderCalibrationPointsOnCanvas(w, h) {
-            ctx.save();
-            ctx.translate(w / 2 + panX, h / 2 + panY);
-            ctx.scale(zoomScale, zoomScale);
-            ctx.translate(-w / 2, -h / 2);
-
             calibrationPairs.forEach((p, idx) => {
-                const ax = p.ax * w;
-                const ay = p.ay * h;
-                const bx = p.bx * w;
-                const by = p.by * h;
+                const ptA = toScreenCoord(p.ax, p.ay, w, h);
+                const ptB = toScreenCoord(p.bx, p.by, w, h);
 
-                // Linia łącząca przesunięcie A -> B
+                // Linia łącząca przesunięcie A -> B (grubość stała 1.5px)
                 ctx.beginPath();
                 ctx.setLineDash([4, 4]);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.lineWidth = 2 / zoomScale;
-                ctx.moveTo(ax, ay);
-                ctx.lineTo(bx, by);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(ptA.x, ptA.y);
+                ctx.lineTo(ptB.x, ptB.y);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
                 // Punkt A (Zielony)
-                drawMarker(ax, ay, `#${idx + 1} A`, '#10b981');
+                drawPrecisionMarker(ptA.x, ptA.y, `#${idx + 1} A`, '#10b981');
 
                 // Punkt B (Złoty/Bursztynowy)
-                drawMarker(bx, by, `#${idx + 1} B`, '#f59e0b');
+                drawPrecisionMarker(ptB.x, ptB.y, `#${idx + 1} B`, '#f59e0b');
             });
 
             // Tymczasowy punkt A oczekujący na kliknięcie B
             if (pendingPointA) {
-                const ax = pendingPointA.ax * w;
-                const ay = pendingPointA.ay * h;
-                drawMarker(ax, ay, `#${calibrationPairs.length + 1} A (Wyznacz B...)`, '#c084fc');
+                const ptA = toScreenCoord(pendingPointA.ax, pendingPointA.ay, w, h);
+                drawPrecisionMarker(ptA.x, ptA.y, `#${calibrationPairs.length + 1} A (Wskaż B...)`, '#c084fc');
             }
-
-            ctx.restore();
         }
 
-        function drawMarker(x, y, label, color) {
-            const r = Math.max(7, 9 / zoomScale);
+        function drawPrecisionMarker(x, y, label, color) {
+            const arm = 9;   // długość ramienia celownika
+            const gap = 2.5; // odstęp w centrum dla widoczności wskazywanego piksela
+
+            // 1. Czarna obwódka / cień pod celownikiem dla widoczności na dowolnym tle
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.fill();
-            ctx.lineWidth = Math.max(1.5, 2.5 / zoomScale);
-            ctx.strokeStyle = '#ffffff';
+            ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y);
+            ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
+            ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap);
+            ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm);
             ctx.stroke();
 
-            // Celownik
-            ctx.beginPath();
-            ctx.moveTo(x - r * 1.6, y); ctx.lineTo(x + r * 1.6, y);
-            ctx.moveTo(x, y - r * 1.6); ctx.lineTo(x, y + r * 1.6);
+            // 2. Kolorowy celownik
             ctx.strokeStyle = color;
-            ctx.lineWidth = Math.max(1.5, 2 / zoomScale);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x - arm, y); ctx.lineTo(x - gap, y);
+            ctx.moveTo(x + gap, y); ctx.lineTo(x + arm, y);
+            ctx.moveTo(x, y - arm); ctx.lineTo(x, y - gap);
+            ctx.moveTo(x, y + gap); ctx.lineTo(x, y + arm);
             ctx.stroke();
 
-            // Etykieta
-            const fontSize = Math.max(12, Math.round(13 / zoomScale));
-            ctx.font = `600 ${fontSize}px JetBrains Mono, monospace`;
+            // 3. Mikro-punkt centralny (promień 1.2px)
+            ctx.beginPath();
+            ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            // 4. Mały okrąg wskaźnika wokół celownika
+            ctx.beginPath();
+            ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // 5. Elegancka plakietka etykiety (stały rozmiar fontu 11px)
+            const fontSize = 11;
+            ctx.font = `600 ${fontSize}px 'JetBrains Mono', monospace`;
+            const textMetrics = ctx.measureText(label);
+            const textWidth = textMetrics.width;
+            const padX = 5;
+            const padY = 3;
+            const labelX = x + arm + 4;
+            const labelY = y - 6;
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(labelX, labelY - fontSize / 2 - padY, textWidth + padX * 2, fontSize + padY * 2, 4);
+            } else {
+                ctx.rect(labelX, labelY - fontSize / 2 - padY, textWidth + padX * 2, fontSize + padY * 2);
+            }
+            ctx.fill();
+            ctx.stroke();
+
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
-            ctx.shadowColor = 'rgba(0,0,0,0.9)';
-            ctx.shadowBlur = 5;
-            ctx.fillText(label, x + r + 5, y + 4);
-            ctx.shadowBlur = 0;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, labelX + padX, labelY);
         }
 
         // Zapobieganie otwieraniu menu kontekstowego przy prawym przycisku na canvasie
@@ -1807,7 +1851,7 @@
                 isPanning = false;
 
                 // Wykrycie krótkiego tapnięcia (stuknięcia palcem) bez przesunięcia kadru
-                if (!hasPanned && touchDuration < 300) {
+                if (!hasPanned && touchDuration < 350) {
                     const rect = canvasContainer.getBoundingClientRect();
                     const touchX = touchStartPos.x - rect.left;
                     const touchY = touchStartPos.y - rect.top;
@@ -1816,6 +1860,9 @@
                     const h = rect.height;
 
                     if (isCalibrationActive) {
+                        lastTouchHandledTime = Date.now();
+                        if (e.cancelable) e.preventDefault();
+
                         const imgX = (touchX - (w / 2 + panX)) / zoomScale + w / 2;
                         const imgY = (touchY - (h / 2 + panY)) / zoomScale + h / 2;
                         const normX = Math.max(0, Math.min(1, imgX / w));
@@ -1823,6 +1870,7 @@
                         addCalibrationClick(normX, normY);
                     } else if (activeMode === 'toggle') {
                         // Szybkie przełączenie A/B po tapnięciu na obraz
+                        lastTouchHandledTime = Date.now();
                         toggleFrames();
                     }
                 }
@@ -1834,6 +1882,7 @@
         // ---------------------------------------------------------------------------------
         canvasContainer.addEventListener('click', (e) => {
             if (!isCalibrationActive) return;
+            if (Date.now() - lastTouchHandledTime < 500) return; // Zapobiegaj dublowaniu zdarzenia po dotknięciu na iPadzie
             if (e.target === curtainHandle || curtainHandle.contains(e.target) || e.target === fullscreenExitBtn) return;
             if (e.button !== 0 || hasPanned) return;
 

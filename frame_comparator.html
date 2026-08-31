@@ -396,6 +396,8 @@
             cursor: grab;
             user-select: none;
             touch-action: none; /* Kluczowe dla iPada: wyłącza domyślne przewijanie strony przy dotyku canvasa */
+            overscroll-behavior: none;
+            -webkit-overscroll-behavior: none;
         }
 
         .view-canvas-container.calibration-mode {
@@ -404,12 +406,32 @@
         }
 
         .view-canvas-container:fullscreen,
-        .view-canvas-container:-webkit-full-screen {
+        .view-canvas-container:-webkit-full-screen,
+        .view-canvas-container.in-app-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            aspect-ratio: auto !important;
+            height: 100dvh !important;
+            max-width: none !important;
+            max-height: none !important;
+            z-index: 999999 !important;
             border-radius: 0 !important;
             border: none !important;
+            aspect-ratio: auto !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
+            touch-action: none !important;
+        }
+
+        body.has-fullscreen-canvas {
+            overflow: hidden !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
+            touch-action: none !important;
         }
 
         .view-canvas-container:active {
@@ -1201,29 +1223,56 @@
 
         opacitySlider.addEventListener('input', renderComparison);
 
-        // Obsługa Pełnego Ekranu (Fullscreen)
+        // Obsługa Pełnego Ekranu (Fullscreen - natywny + in-app dla iOS Safari)
         function toggleFullscreen() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (canvasContainer.requestFullscreen) {
-                    canvasContainer.requestFullscreen();
-                } else if (canvasContainer.webkitRequestFullscreen) {
-                    canvasContainer.webkitRequestFullscreen();
-                }
+            const isCurrentlyFull = canvasContainer.classList.contains('in-app-fullscreen') || 
+                                   !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+            if (!isCurrentlyFull) {
+                canvasContainer.classList.add('in-app-fullscreen');
+                document.body.classList.add('has-fullscreen-canvas');
+                fullscreenExitBtn.style.display = 'block';
+                btnFullscreen.textContent = '🗗 Zwiń Ekran';
+
+                try {
+                    if (canvasContainer.requestFullscreen) {
+                        canvasContainer.requestFullscreen().catch(() => {});
+                    } else if (canvasContainer.webkitRequestFullscreen) {
+                        canvasContainer.webkitRequestFullscreen();
+                    }
+                } catch (err) {}
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
+                canvasContainer.classList.remove('in-app-fullscreen');
+                document.body.classList.remove('has-fullscreen-canvas');
+                fullscreenExitBtn.style.display = 'none';
+                btnFullscreen.textContent = '⛶ Pełny Ekran';
+
+                try {
+                    if (document.fullscreenElement && document.exitFullscreen) {
+                        document.exitFullscreen().catch(() => {});
+                    } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                } catch (err) {}
             }
+            setTimeout(resizeCanvas, 60);
         }
 
         btnFullscreen.addEventListener('click', toggleFullscreen);
         fullscreenExitBtn.addEventListener('click', toggleFullscreen);
 
         const handleFullscreenChange = () => {
-            const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
-            fullscreenExitBtn.style.display = isFull ? 'block' : 'none';
+            const isNativeFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            if (!isNativeFull && !canvasContainer.classList.contains('in-app-fullscreen')) {
+                fullscreenExitBtn.style.display = 'none';
+                btnFullscreen.textContent = '⛶ Pełny Ekran';
+                document.body.classList.remove('has-fullscreen-canvas');
+            } else if (isNativeFull) {
+                canvasContainer.classList.add('in-app-fullscreen');
+                document.body.classList.add('has-fullscreen-canvas');
+                fullscreenExitBtn.style.display = 'block';
+                btnFullscreen.textContent = '🗗 Zwiń Ekran';
+            }
             setTimeout(resizeCanvas, 60);
         };
 
@@ -1787,9 +1836,10 @@
             hasPanned = false;
             touchStartTime = Date.now();
 
+            if (e.cancelable) e.preventDefault(); // Zapobiega pull-to-refresh i domyślnym gestom Safari
+
             if (e.touches.length === 2) {
                 // Początek gestu Pinch-to-zoom
-                e.preventDefault();
                 initialPinchDistance = getTouchDistance(e.touches[0], e.touches[1]);
                 initialPinchScale = zoomScale;
                 initialPinchCenter = getTouchCenter(e.touches[0], e.touches[1]);
@@ -1809,9 +1859,10 @@
         canvasContainer.addEventListener('touchmove', (e) => {
             if (e.target === curtainHandle || curtainHandle.contains(e.target)) return;
 
+            if (e.cancelable) e.preventDefault(); // Kluczowe dla iOS: blokuje gest swipe down zamykający pełny ekran
+
             if (e.touches.length === 2 && initialPinchDistance) {
                 // Trwa Pinch-to-zoom dwoma palcami
-                e.preventDefault();
                 const dist = getTouchDistance(e.touches[0], e.touches[1]);
                 const center = getTouchCenter(e.touches[0], e.touches[1]);
                 const scaleFactor = dist / initialPinchDistance;

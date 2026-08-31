@@ -575,9 +575,9 @@
         let latestVideo = null;
         let isTaskRunning = false;
 
-        async function fetchCameras() {
+        async function fetchCameras(forceRefresh = false) {
             try {
-                const res = await fetch('/api/cameras');
+                const res = await fetch('/api/cameras' + (forceRefresh ? '?refresh=1' : ''));
                 const data = await res.json();
                 camerasData = data.cameras || [];
                 renderCameras();
@@ -883,7 +883,7 @@
         });
 
         document.getElementById('btnRefreshAll').addEventListener('click', () => {
-            fetchCameras();
+            fetchCameras(true);
             fetchVideos();
             checkGdriveStatus();
         });
@@ -893,13 +893,13 @@
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(async () => {
                 await checkGdriveStatus();
-                await fetchCameras();
-                await fetchVideos();
                 if (!isTaskRunning) {
                     clearInterval(pollInterval);
                     pollInterval = null;
+                    await fetchCameras();
+                    await fetchVideos();
                 }
-            }, 3000);
+            }, 2000);
         }
 
         fetchCameras();

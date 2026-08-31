@@ -134,51 +134,84 @@ def get_rclone_cmd():
         cmd.extend(["--config", str(BASE_DIR / "rclone.conf")])
     return cmd
 
-def fetch_cloud_main_files():
-    cmd = get_rclone_cmd() + [
-        "lsjson", RCLONE_REMOTE,
-        "--recursive", "--max-depth", "2",
-        "--include", "*_DAY.mp4",
-        "--include", "*_NIGHT.mp4",
-        "--include", "*_FULL.mp4",
-        "--include", "*_metadata.json"
-    ]
-    res = subprocess.run(cmd, capture_output=True, text=True, timeout=40)
-    if res.returncode != 0:
-        raise Exception(f"Błąd rclone lsjson: {res.stderr}")
+CLOUD_CACHE = {
+    "files": [],
+    "last_fetched": 0,
+    "lock": threading.Lock(),
+    "is_fetching": False
+}
+CACHE_TTL_SECONDS = 120  # 2 minuty cache dla metadanych z chmury
 
-    items = json.loads(res.stdout)
-    main_files = []
-    for it in items:
-        if it.get("IsDir"): continue
-        name = it.get("Name", "")
-        if any(name.endswith(s) for s in ["_DAY.mp4", "_NIGHT.mp4", "_FULL.mp4", "_metadata.json"]):
-            cam_name = "Nieznana"
-            type_name = "INNE"
-            for part in ["DAY", "NIGHT", "FULL"]:
-                if f"_{part}" in name:
-                    type_name = part
-                    cam_name = name.split(f"_{part}")[0]
-                    break
-            if cam_name == "Nieznana" and "_" in name:
-                cam_name = name.split("_")[0]
+def background_refresh_cloud_cache():
+    def _worker():
+        if CLOUD_CACHE["is_fetching"]:
+            return
+        CLOUD_CACHE["is_fetching"] = True
+        try:
+            fetch_cloud_main_files(force_refresh=True)
+        except Exception as e:
+            pass
+        finally:
+            CLOUD_CACHE["is_fetching"] = False
+    threading.Thread(target=_worker, daemon=True).start()
 
-            main_files.append({
-                "path": it.get("Path"),
-                "name": name,
-                "camera": cam_name,
-                "type": type_name,
-                "size_bytes": it.get("Size", 0),
-                "size_formatted": format_size(it.get("Size", 0)),
-                "mtime": it.get("ModTime"),
-                "is_video": name.endswith(".mp4"),
-                "is_json": name.endswith(".json")
-            })
+def fetch_cloud_main_files(force_refresh=False):
+    now = time.time()
+    if not force_refresh and CLOUD_CACHE["files"] and (now - CLOUD_CACHE["last_fetched"] < CACHE_TTL_SECONDS):
+        return CLOUD_CACHE["files"]
 
-    main_files.sort(key=lambda x: x.get("mtime", ""), reverse=True)
-    return main_files
+    with CLOUD_CACHE["lock"]:
+        if not force_refresh and CLOUD_CACHE["files"] and (time.time() - CLOUD_CACHE["last_fetched"] < CACHE_TTL_SECONDS):
+            return CLOUD_CACHE["files"]
 
-def get_grouped_cameras_data():
+        cmd = get_rclone_cmd() + [
+            "lsjson", RCLONE_REMOTE,
+            "--recursive", "--max-depth", "2",
+            "--include", "*_DAY.mp4",
+            "--include", "*_NIGHT.mp4",
+            "--include", "*_FULL.mp4",
+            "--include", "*_metadata.json"
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=40)
+        if res.returncode != 0:
+            if CLOUD_CACHE["files"]:
+                return CLOUD_CACHE["files"]
+            raise Exception(f"Błąd rclone lsjson: {res.stderr}")
+
+        items = json.loads(res.stdout)
+        main_files = []
+        for it in items:
+            if it.get("IsDir"): continue
+            name = it.get("Name", "")
+            if any(name.endswith(s) for s in ["_DAY.mp4", "_NIGHT.mp4", "_FULL.mp4", "_metadata.json"]):
+                cam_name = "Nieznana"
+                type_name = "INNE"
+                for part in ["DAY", "NIGHT", "FULL"]:
+                    if f"_{part}" in name:
+                        type_name = part
+                        cam_name = name.split(f"_{part}")[0]
+                        break
+                if cam_name == "Nieznana" and "_" in name:
+                    cam_name = name.split("_")[0]
+
+                main_files.append({
+                    "path": it.get("Path"),
+                    "name": name,
+                    "camera": cam_name,
+                    "type": type_name,
+                    "size_bytes": it.get("Size", 0),
+                    "size_formatted": format_size(it.get("Size", 0)),
+                    "mtime": it.get("ModTime"),
+                    "is_video": name.endswith(".mp4"),
+                    "is_json": name.endswith(".json")
+                })
+
+        main_files.sort(key=lambda x: x.get("mtime", ""), reverse=True)
+        CLOUD_CACHE["files"] = main_files
+        CLOUD_CACHE["last_fetched"] = time.time()
+        return main_files
+
+def get_grouped_cameras_data(force_refresh=False):
     local_videos = get_local_video_files()
     local_map = {}
     for v in local_videos:
@@ -190,10 +223,21 @@ def get_grouped_cameras_data():
         if m["filename"] not in local_meta_map:
             local_meta_map[m["filename"]] = m
 
-    try:
-        cloud_files = fetch_cloud_main_files()
-    except Exception:
-        cloud_files = []
+    cloud_files = []
+    # Jeśli mamy cache, użyj go natychmiast
+    if CLOUD_CACHE["files"] and not force_refresh:
+        cloud_files = CLOUD_CACHE["files"]
+        if time.time() - CLOUD_CACHE["last_fetched"] >= CACHE_TTL_SECONDS:
+            background_refresh_cloud_cache()
+    elif force_refresh:
+        try:
+            cloud_files = fetch_cloud_main_files(force_refresh=True)
+        except Exception:
+            cloud_files = CLOUD_CACHE["files"]
+    else:
+        # Cache jest jeszcze pusty (np. tuż po restarcie serwera)
+        # Zwracamy natychmiast dane lokalne, a chmurę dociągamy w tle
+        background_refresh_cloud_cache()
 
     cloud_map = {f["name"]: f for f in cloud_files}
 
@@ -459,7 +503,9 @@ class TimelapseHTTPHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/cameras":
-            self.send_json({"cameras": get_grouped_cameras_data()})
+            query = urllib.parse.parse_qs(parsed.query)
+            force = "refresh" in query or "force" in query
+            self.send_json({"cameras": get_grouped_cameras_data(force_refresh=force)})
             return
         elif path == "/api/videos":
             self.send_json({"videos": get_local_video_files()})
@@ -675,6 +721,7 @@ class TimelapseHTTPHandler(BaseHTTPRequestHandler):
 def start_server():
     print(f"🚀 BlueIris Timelapse Hub działa pod adresem: http://{HOST}:{PORT}")
     print(f"   Katalog wideo: {VIDEO_DIR}")
+    background_refresh_cloud_cache()
     server = ThreadingHTTPServer((HOST, PORT), TimelapseHTTPHandler)
     try:
         server.serve_forever()

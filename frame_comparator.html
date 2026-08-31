@@ -1223,37 +1223,48 @@
 
         opacitySlider.addEventListener('input', renderComparison);
 
-        // Obsługa Pełnego Ekranu (Fullscreen - natywny + in-app dla iOS Safari)
+        // Wykrywanie urządzeń Apple / dotykowych (iPad, iPhone, iPod)
+        const isAppleTouchDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        // Obsługa Pełnego Ekranu (In-App Fullscreen dla iOS / natywny dla desktopu)
         function toggleFullscreen() {
             const isCurrentlyFull = canvasContainer.classList.contains('in-app-fullscreen') || 
                                    !!(document.fullscreenElement || document.webkitFullscreenElement);
 
             if (!isCurrentlyFull) {
+                // Włącz pełny ekran
                 canvasContainer.classList.add('in-app-fullscreen');
                 document.body.classList.add('has-fullscreen-canvas');
                 fullscreenExitBtn.style.display = 'block';
                 btnFullscreen.textContent = '🗗 Zwiń Ekran';
 
-                try {
-                    if (canvasContainer.requestFullscreen) {
-                        canvasContainer.requestFullscreen().catch(() => {});
-                    } else if (canvasContainer.webkitRequestFullscreen) {
-                        canvasContainer.webkitRequestFullscreen();
-                    }
-                } catch (err) {}
+                // Na desktopie (nie-iOS) możemy opcjonalnie uruchomić natywny fullscreen
+                if (!isAppleTouchDevice) {
+                    try {
+                        if (canvasContainer.requestFullscreen) {
+                            canvasContainer.requestFullscreen().catch(() => {});
+                        } else if (canvasContainer.webkitRequestFullscreen) {
+                            canvasContainer.webkitRequestFullscreen();
+                        }
+                    } catch (err) {}
+                }
             } else {
+                // Wyłącz pełny ekran
                 canvasContainer.classList.remove('in-app-fullscreen');
                 document.body.classList.remove('has-fullscreen-canvas');
                 fullscreenExitBtn.style.display = 'none';
                 btnFullscreen.textContent = '⛶ Pełny Ekran';
 
-                try {
-                    if (document.fullscreenElement && document.exitFullscreen) {
-                        document.exitFullscreen().catch(() => {});
-                    } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    }
-                } catch (err) {}
+                if (!isAppleTouchDevice) {
+                    try {
+                        if (document.fullscreenElement && document.exitFullscreen) {
+                            document.exitFullscreen().catch(() => {});
+                        } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        }
+                    } catch (err) {}
+                }
             }
             setTimeout(resizeCanvas, 60);
         }
@@ -1262,12 +1273,14 @@
         fullscreenExitBtn.addEventListener('click', toggleFullscreen);
 
         const handleFullscreenChange = () => {
+            if (isAppleTouchDevice) return; // Na iOS zarządzamy pełnym ekranem wewnątrz aplikacji
             const isNativeFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
-            if (!isNativeFull && !canvasContainer.classList.contains('in-app-fullscreen')) {
+            if (!isNativeFull) {
+                canvasContainer.classList.remove('in-app-fullscreen');
+                document.body.classList.remove('has-fullscreen-canvas');
                 fullscreenExitBtn.style.display = 'none';
                 btnFullscreen.textContent = '⛶ Pełny Ekran';
-                document.body.classList.remove('has-fullscreen-canvas');
-            } else if (isNativeFull) {
+            } else {
                 canvasContainer.classList.add('in-app-fullscreen');
                 document.body.classList.add('has-fullscreen-canvas');
                 fullscreenExitBtn.style.display = 'block';

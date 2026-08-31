@@ -127,11 +127,25 @@ def cleanup_duplicate_files(dest_path: Path, filename: str):
         pass
 
 def get_rclone_cmd():
-    cmd = ["rclone"]
+    conf_src = None
     if RCLONE_CONFIG and os.path.exists(RCLONE_CONFIG):
-        cmd.extend(["--config", RCLONE_CONFIG])
+        conf_src = RCLONE_CONFIG
     elif os.path.exists(str(BASE_DIR / "rclone.conf")):
-        cmd.extend(["--config", str(BASE_DIR / "rclone.conf")])
+        conf_src = str(BASE_DIR / "rclone.conf")
+
+    cmd = ["rclone"]
+    if conf_src:
+        if os.name != 'nt':
+            tmp_conf = "/tmp/rclone.conf"
+            try:
+                if not os.path.exists(tmp_conf) or (os.path.exists(conf_src) and os.path.getmtime(conf_src) > os.path.getmtime(tmp_conf)):
+                    import shutil
+                    shutil.copy2(conf_src, tmp_conf)
+                cmd.extend(["--config", tmp_conf])
+            except Exception:
+                cmd.extend(["--config", conf_src])
+        else:
+            cmd.extend(["--config", conf_src])
     return cmd
 
 CLOUD_CACHE = {

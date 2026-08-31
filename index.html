@@ -633,8 +633,9 @@
             document.getElementById('latestTimeBadge').textContent = video.mtime_formatted;
             
             const player = document.getElementById('mainVideoPlayer');
-            const newSrc = `/api/video/${encodeURIComponent(video.rel_path)}`;
-            if (!player.src.includes(encodeURIComponent(video.rel_path))) {
+            const newSrc = `/api/video/${encodeURIComponent(video.rel_path)}?t=${video.mtime || Date.now()}`;
+            if (player.getAttribute('data-src') !== video.rel_path) {
+                player.setAttribute('data-src', video.rel_path);
                 player.src = newSrc;
             }
 
@@ -787,7 +788,8 @@
 
         function playInPlayer(relPath, filename, camera, size, mtime, metaFile) {
             const player = document.getElementById('mainVideoPlayer');
-            player.src = `/api/video/${encodeURIComponent(relPath)}`;
+            player.setAttribute('data-src', relPath);
+            player.src = `/api/video/${encodeURIComponent(relPath)}?t=${Date.now()}`;
             player.play();
 
             document.getElementById('metaFilename').textContent = filename;
@@ -893,6 +895,10 @@
                 await checkGdriveStatus();
                 await fetchCameras();
                 await fetchVideos();
+                if (!isTaskRunning) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                }
             }, 3000);
         }
 

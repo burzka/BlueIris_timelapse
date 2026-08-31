@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import glob
 import json
@@ -94,11 +94,37 @@ def get_metadata_files():
             meta_files.append({
                 "filename": p.name,
                 "rel_path": p.relative_to(VIDEO_DIR).as_posix(),
+                "size_bytes": stat.st_size,
                 "size_formatted": format_size(stat.st_size),
+                "mtime": stat.st_mtime,
                 "mtime_formatted": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
             })
-    meta_files.sort(key=lambda x: x["filename"])
+    meta_files.sort(key=lambda x: x["mtime"], reverse=True)
     return meta_files
+
+def get_target_local_path(cloud_path: str, filename: str) -> Path:
+    if cloud_path and "/" in cloud_path:
+        dest = VIDEO_DIR / cloud_path
+    else:
+        cam_name = filename.split("_")[0] if "_" in filename else ""
+        if cam_name in CAMERA_NAMES:
+            dest = VIDEO_DIR / cam_name / filename
+        else:
+            dest = VIDEO_DIR / filename
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    return dest
+
+def cleanup_duplicate_files(dest_path: Path, filename: str):
+    """Usuwa ewentualne starsze duplikaty tego samego pliku z innych lokalizacji."""
+    try:
+        for p in VIDEO_DIR.rglob(filename):
+            if p.is_file() and p.resolve() != dest_path.resolve():
+                try:
+                    p.unlink()
+                except Exception:
+                    pass
+    except Exception:
+        pass
 
 def get_rclone_cmd():
     cmd = ["rclone"]
@@ -154,8 +180,15 @@ def fetch_cloud_main_files():
 
 def get_grouped_cameras_data():
     local_videos = get_local_video_files()
-    local_map = {v["filename"]: v for v in local_videos}
-    local_meta_map = {m["filename"]: m for m in get_metadata_files()}
+    local_map = {}
+    for v in local_videos:
+        if v["filename"] not in local_map:
+            local_map[v["filename"]] = v
+
+    local_meta_map = {}
+    for m in get_metadata_files():
+        if m["filename"] not in local_meta_map:
+            local_meta_map[m["filename"]] = m
 
     try:
         cloud_files = fetch_cloud_main_files()
@@ -229,7 +262,7 @@ def run_download_file_task(cloud_path, filename):
 
     try:
         remote_source = f"{RCLONE_REMOTE.rstrip('/')}/{cloud_path}"
-        local_dest = VIDEO_DIR / filename
+        local_dest = get_target_local_path(cloud_path, filename)
         cmd = get_rclone_cmd() + ["copyto", remote_source, str(local_dest), "-P", "--update"]
         current_task["logs"].append(f"Polecenie: rclone copyto {remote_source} -> {local_dest}")
 
@@ -247,12 +280,17 @@ def run_download_file_task(cloud_path, filename):
         if active_process.returncode != 0:
             raise Exception("Pobieranie zostało przerwane lub wystąpił błąd.")
 
+        cleanup_duplicate_files(local_dest, filename)
+
         if filename.endswith(".mp4") and not filename.endswith("_metadata.json"):
             meta_name = filename.replace(".mp4", "_metadata.json")
             meta_remote = remote_source.replace(".mp4", "_metadata.json")
-            local_meta = VIDEO_DIR / meta_name
+            meta_cpath = cloud_path.replace(".mp4", "_metadata.json") if cloud_path else meta_name
+            local_meta = get_target_local_path(meta_cpath, meta_name)
             cmd_meta = get_rclone_cmd() + ["copyto", meta_remote, str(local_meta), "--update"]
-            subprocess.run(cmd_meta, capture_output=True, timeout=20)
+            res_meta = subprocess.run(cmd_meta, capture_output=True, timeout=20)
+            if res_meta.returncode == 0:
+                cleanup_duplicate_files(local_meta, meta_name)
 
         current_task["status"] = "completed"
         current_task["progress_message"] = f"Plik {filename} został pomyślnie zaktualizowany!"
@@ -288,7 +326,7 @@ def run_download_camera_task(camera_name):
             current_task["logs"].append(f"Pobieranie {fname} ({f['size_formatted']})...")
 
             remote_src = f"{RCLONE_REMOTE.rstrip('/')}/{cpath}"
-            local_dst = VIDEO_DIR / fname
+            local_dst = get_target_local_path(cpath, fname)
 
             cmd = get_rclone_cmd() + ["copyto", remote_src, str(local_dst), "-P", "--update"]
             active_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -300,6 +338,8 @@ def run_download_camera_task(camera_name):
                     current_task["progress_message"] = f"[{idx}/{len(cam_files)}] {fname}: {line_str}"
 
             active_process.wait()
+            if active_process.returncode == 0:
+                cleanup_duplicate_files(local_dst, fname)
 
         if current_task["status"] != "cancelled":
             current_task["status"] = "completed"
@@ -335,7 +375,7 @@ def run_sync_main_files_task():
             current_task["logs"].append(f"Sprawdzanie {fname} ({f['size_formatted']})...")
 
             remote_src = f"{RCLONE_REMOTE.rstrip('/')}/{cpath}"
-            local_dst = VIDEO_DIR / fname
+            local_dst = get_target_local_path(cpath, fname)
 
             cmd = get_rclone_cmd() + ["copyto", remote_src, str(local_dst), "-P", "--update"]
             active_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -347,12 +387,17 @@ def run_sync_main_files_task():
                     current_task["progress_message"] = f"[{idx}/{len(video_files)}] {fname}: {line_str}"
 
             active_process.wait()
+            if active_process.returncode == 0:
+                cleanup_duplicate_files(local_dst, fname)
 
             meta_name = fname.replace(".mp4", "_metadata.json")
             meta_remote = remote_src.replace(".mp4", "_metadata.json")
-            local_meta = VIDEO_DIR / meta_name
+            meta_cpath = cpath.replace(".mp4", "_metadata.json") if cpath else meta_name
+            local_meta = get_target_local_path(meta_cpath, meta_name)
             cmd_meta = get_rclone_cmd() + ["copyto", meta_remote, str(local_meta), "--update"]
-            subprocess.run(cmd_meta, capture_output=True, timeout=15)
+            res_m = subprocess.run(cmd_meta, capture_output=True, timeout=15)
+            if res_m.returncode == 0:
+                cleanup_duplicate_files(local_meta, meta_name)
 
         if current_task["status"] != "cancelled":
             current_task["status"] = "completed"

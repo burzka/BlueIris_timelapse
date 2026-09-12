@@ -735,16 +735,92 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.75rem;
         }
+
+        .drag-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(14, 23, 42, 0.9);
+            border: 3px dashed var(--accent);
+            border-radius: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+        }
+        .drag-overlay.active {
+            display: flex;
+        }
+        .drag-overlay-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .drag-overlay-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .toast-notify {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 12px;
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 999999;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .toast-notify.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .btn-direct-upload {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px dashed var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .btn-direct-upload:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
     </style>
 </head>
 <body>
+
+    <div class="toast-notify" id="toastNotify">ℹ️ Powiadomienie</div>
 
     <header>
         <div class="logo-title">
             <div class="logo-icon">VS</div>
             <div>
-                <h1>Porównywarka Klatek Wideo (Timelapse)</h1>
-                <p style="font-size: 0.8rem; color: var(--text-muted);">Analiza zmian w przyrodzie i terenie z kalibracją ruszającej się kamery</p>
+                <h1>Porównywarka Klatek i Zdjęć (Timelapse)</h1>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Analiza zmian w przyrodzie i terenie: obsługa filmów i zdjęć dowolnej rozdzielczości z kalibracją</p>
             </div>
         </div>
 
@@ -761,19 +837,19 @@
                 <button class="btn" id="btnLoadPreset">Załaduj</button>
             </div>
 
-            <label class="btn-file">
-                📁 Z dysku
-                <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
+            <label class="btn-file" title="Wybierz plik wideo lub zdjęcia z dysku (możesz zaznaczyć 2 zdjęcia naraz)">
+                📁 Z dysku (Film / Zdjęcia)
+                <input type="file" id="mediaFileInput" accept="video/*,image/*" multiple style="display: none;">
             </label>
         </div>
     </header>
 
     <div class="main-layout">
-        <!-- Odtwarzacz Wideo i Wybór Klatek -->
-        <div class="card">
+        <!-- Odtwarzacz Wideo / Podgląd Zdjęcia i Wybór Klatek -->
+        <div class="card" id="sourceCard">
             <div class="card-header">
                 <div class="card-title">
-                    <span>🎬 Odtwarzacz Źródłowy</span>
+                    <span id="sourceTitleLabel">🎬 Źródło (Wideo / Zdjęcie)</span>
                     <span class="badge badge-blue" id="videoNameBadge">Brak wideo</span>
                 </div>
                 <div class="time-display" id="timeDisplay">00:00.00 / 00:00.00</div>
@@ -781,14 +857,19 @@
 
             <div class="media-container" id="videoContainer">
                 <video id="videoPlayer" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></video>
+                <img id="imageViewer" style="display: none; width: 100%; height: 100%; object-fit: contain; background: #000;" alt="Podgląd zdjęcia źródłowego">
+                <div class="drag-overlay" id="sourceDragOverlay">
+                    <div class="drag-overlay-title">📥 Upuść film lub zdjęcie</div>
+                    <div class="drag-overlay-desc">Wczytaj do odtwarzacza / podglądu źródłowego</div>
+                </div>
             </div>
 
             <div class="controls-panel">
-                <div class="slider-row">
+                <div class="slider-row" id="videoSliderRow">
                     <input type="range" id="timeSeeker" min="0" max="100" step="0.01" value="0">
                 </div>
 
-                <div class="btn-grid">
+                <div class="btn-grid" id="videoBtnGrid">
                     <button class="btn" id="btnStepBack5s" title="Cofnij o 5 sekund">⏮️ -5s</button>
                     <button class="btn" id="btnStepBack1s" title="Cofnij o 1 sekundę">⏪ -1s</button>
                     <button class="btn" id="btnStepBackFrame" title="Cofnij o 1 klatkę (~0.033s)">◀ -1 f</button>
@@ -805,6 +886,18 @@
                     <button class="btn btn-frame-b" id="btnCaptureB" style="flex: 1; min-height: 46px;">
                         📌 Zapisz jako Klatkę B <kbd>B</kbd>
                     </button>
+                </div>
+
+                <!-- Bezpośrednie wgrywanie zdjęć A i B z dysku -->
+                <div style="display: flex; gap: 10px; margin-top: 2px; flex-wrap: wrap;">
+                    <label class="btn-direct-upload" style="flex: 1; min-height: 40px;" title="Wgraj dowolne zdjęcie (dowolna rozdzielczość) bezpośrednio jako Klatkę A">
+                        🖼️ Wgraj Zdjęcie A z dysku
+                        <input type="file" id="directImageInputA" accept="image/*" style="display: none;">
+                    </label>
+                    <label class="btn-direct-upload" style="flex: 1; min-height: 40px;" title="Wgraj dowolne zdjęcie (dowolna rozdzielczość) bezpośrednio jako Klatkę B">
+                        🖼️ Wgraj Zdjęcie B z dysku
+                        <input type="file" id="directImageInputB" accept="image/*" style="display: none;">
+                    </label>
                 </div>
             </div>
         </div>
@@ -848,6 +941,10 @@
                 <button class="fullscreen-exit-btn" id="fullscreenExitBtn">❌ Wyjdź z pełnego ekranu <kbd>Esc</kbd></button>
 
                 <canvas id="compCanvas"></canvas>
+                <div class="drag-overlay" id="canvasDragOverlay">
+                    <div class="drag-overlay-title">📥 Upuść zdjęcia lub filmy</div>
+                    <div class="drag-overlay-desc">Wgraj 2 zdjęcia o dowolnej rozdzielczości, aby od razu porównać</div>
+                </div>
             </div>
 
             <!-- Pasek szybkiego porównywania dla iPad / ekranów dotykowych -->
@@ -866,6 +963,13 @@
             <div class="zoom-controls">
                 <div class="zoom-info" id="zoomInfo">Powiększenie: 100% | Pozycja: (0, 0)</div>
                 <div id="extraControls" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+                        <span style="color: var(--text-muted);">Dopasowanie B:</span>
+                        <select id="fitModeSelect" style="padding: 4px 8px; min-height: 32px; font-size: 0.8rem;" title="Sposób dopasowania Klatki B, gdy ma inne proporcje niż Klatka A">
+                            <option value="contain">Zachowaj proporcje (Contain)</option>
+                            <option value="fill">Wypełnij kadr (Fill)</option>
+                        </select>
+                    </div>
                     <!-- Pokazywane w trybie Opacity -->
                     <div id="opacitySliderGroup" style="display: none; align-items: center; gap: 8px;">
                         <span style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">Przenikanie B:</span>
@@ -905,6 +1009,7 @@
 
     <div class="shortcut-hint">
         <div>💡 <strong>Sterowanie i gesty (iPad & PC):</strong></div>
+        <div>🖼️ <strong>Zdjęcia i Filmy:</strong> Wgraj pliki z dysku (dowolna rozdzielczość HD/4K/8K), zaznacz 2 zdjęcia naraz lub przeciągnij (Drag & Drop)</div>
         <div>📱 <strong>Pinch-to-zoom:</strong> Szczypanie 2 palcami do powiększania</div>
         <div>👆 <strong>Dotyk:</strong> 1 palec przesuwa obraz (Pan) / Stuknięcie przełącza A↔B</div>
         <div>👁️ <strong>Hold to Peek:</strong> Przytrzymaj przycisk, aby podejrzeć klatkę</div>
@@ -918,8 +1023,19 @@
     <script>
         // Elementy DOM
         const videoPlayer = document.getElementById('videoPlayer');
+        const imageViewer = document.getElementById('imageViewer');
         const videoContainer = document.getElementById('videoContainer');
-        const videoFileInput = document.getElementById('videoFileInput');
+        const mediaFileInput = document.getElementById('mediaFileInput');
+        const directImageInputA = document.getElementById('directImageInputA');
+        const directImageInputB = document.getElementById('directImageInputB');
+        const sourceDragOverlay = document.getElementById('sourceDragOverlay');
+        const canvasDragOverlay = document.getElementById('canvasDragOverlay');
+        const toastNotify = document.getElementById('toastNotify');
+        const fitModeSelect = document.getElementById('fitModeSelect');
+        const sourceTitleLabel = document.getElementById('sourceTitleLabel');
+        const videoSliderRow = document.getElementById('videoSliderRow');
+        const videoBtnGrid = document.getElementById('videoBtnGrid');
+
         const presetVideoSelect = document.getElementById('presetVideoSelect');
         const btnLoadPreset = document.getElementById('btnLoadPreset');
         const timeSeeker = document.getElementById('timeSeeker');
@@ -968,8 +1084,16 @@
         // Stan Aplikacji
         let frameA = null;
         let timeA = null;
+        let frameAName = '';
         let frameB = null;
         let timeB = null;
+        let frameBName = '';
+
+        let currentSourceType = 'video'; // 'video' lub 'image'
+        let currentSourceName = '';
+        let currentImageNaturalWidth = 0;
+        let currentImageNaturalHeight = 0;
+        let fitModeB = 'contain'; // 'contain' lub 'fill'
 
         let activeMode = 'toggle'; // 'toggle', 'split', 'blend', 'side'
         let activeToggleFrame = 'A'; // 'A' lub 'B'
@@ -1002,11 +1126,104 @@
 
         const FRAME_TIME = 1 / 30; // Zakładamy ok. 30 fps
 
-        // Ładowanie domyślnego lub wskazanego wideo
+        // Wyświetlanie powiadomień Toast
+        function showToast(msg, duration = 3200) {
+            if (!toastNotify) return;
+            toastNotify.textContent = msg;
+            toastNotify.classList.add('show');
+            clearTimeout(toastNotify._timer);
+            toastNotify._timer = setTimeout(() => {
+                toastNotify.classList.remove('show');
+            }, duration);
+        }
+
+        // Dopasowanie proporcji kontenera porównywarki do klatki bazowej
+        function updateContainerAspectRatio() {
+            const isFull = canvasContainer.classList.contains('in-app-fullscreen') || 
+                           !!(document.fullscreenElement || document.webkitFullscreenElement);
+            if (isFull) {
+                canvasContainer.style.aspectRatio = 'auto';
+                return;
+            }
+
+            if (frameA && frameA.width && frameA.height) {
+                canvasContainer.style.aspectRatio = `${frameA.width} / ${frameA.height}`;
+            } else if (frameB && frameB.width && frameB.height) {
+                canvasContainer.style.aspectRatio = `${frameB.width} / ${frameB.height}`;
+            } else {
+                canvasContainer.style.aspectRatio = '16 / 9';
+            }
+            setTimeout(resizeCanvas, 40);
+        }
+
+        // Ładowanie źródła wideo
         function loadVideoSource(url, name) {
+            currentSourceType = 'video';
+            currentSourceName = name;
+            imageViewer.style.display = 'none';
+            videoPlayer.style.display = 'block';
+            videoSliderRow.style.display = 'flex';
+            videoBtnGrid.style.display = 'flex';
+            sourceTitleLabel.textContent = '🎬 Źródło (Wideo)';
             videoPlayer.src = url;
             videoPlayer.load();
             videoNameBadge.textContent = name;
+            showToast(`🎬 Załadowano wideo: ${name}`);
+        }
+
+        // Ładowanie źródła zdjęcia (dowolna rozdzielczość)
+        function loadImageSource(url, name) {
+            currentSourceType = 'image';
+            currentSourceName = name;
+            videoPlayer.pause();
+            videoPlayer.style.display = 'none';
+            imageViewer.style.display = 'block';
+            videoSliderRow.style.display = 'none';
+            videoBtnGrid.style.display = 'none';
+            sourceTitleLabel.textContent = '🖼️ Źródło (Zdjęcie)';
+
+            imageViewer.onload = () => {
+                currentImageNaturalWidth = imageViewer.naturalWidth;
+                currentImageNaturalHeight = imageViewer.naturalHeight;
+                videoNameBadge.textContent = `${name} (${currentImageNaturalWidth}×${currentImageNaturalHeight})`;
+                timeDisplay.textContent = `${currentImageNaturalWidth} × ${currentImageNaturalHeight} px`;
+                showToast(`🖼️ Załadowano zdjęcie: ${name} (${currentImageNaturalWidth}×${currentImageNaturalHeight} px)`);
+            };
+            imageViewer.src = url;
+        }
+
+        // Bezpośrednie wczytywanie pliku graficznego o dowolnej rozdzielczości jako Klatka A lub B
+        function loadDirectImageFile(file, targetType) {
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = img.naturalWidth;
+                offCanvas.height = img.naturalHeight;
+                const offCtx = offCanvas.getContext('2d');
+                offCtx.imageSmoothingEnabled = true;
+                offCtx.imageSmoothingQuality = 'high';
+                offCtx.drawImage(img, 0, 0);
+
+                if (targetType === 'A') {
+                    frameA = offCanvas;
+                    timeA = null;
+                    frameAName = file.name;
+                    indicatorA.textContent = `Klatka A: ${file.name} (${img.naturalWidth}×${img.naturalHeight})`;
+                    updateContainerAspectRatio();
+                    showToast(`✅ Wczytano Klatkę A: ${file.name} (${img.naturalWidth}×${img.naturalHeight})`);
+                } else {
+                    frameB = offCanvas;
+                    timeB = null;
+                    frameBName = file.name;
+                    indicatorB.textContent = `Klatka B: ${file.name} (${img.naturalWidth}×${img.naturalHeight})`;
+                    if (!frameA) updateContainerAspectRatio();
+                    showToast(`✅ Wczytano Klatkę B: ${file.name} (${img.naturalWidth}×${img.naturalHeight})`);
+                }
+                renderComparison();
+            };
+            img.src = url;
         }
 
         // Inicjalizacja listy wideo z serwera lub fallback
@@ -1076,13 +1293,77 @@
             }
         });
 
-        videoFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                loadVideoSource(url, file.name);
-            }
-        });
+        // Wgrywanie z dysku z głównego przycisku w nagłówku (filmy lub dowolne zdjęcia)
+        if (mediaFileInput) {
+            mediaFileInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+
+                const isImg = (f) => f.type.startsWith('image/') || /\.(jpe?g|png|webp|bmp|gif|tiff?)$/i.test(f.name);
+                const isVid = (f) => f.type.startsWith('video/') || /\.(mp4|mkv|webm|mov|avi|ts)$/i.test(f.name);
+
+                if (files.length >= 2 && files.slice(0, 2).every(isImg)) {
+                    // Wybrano co najmniej 2 zdjęcia - automatycznie pierwsze trafia jako Klatka A, drugie jako Klatka B!
+                    loadDirectImageFile(files[0], 'A');
+                    setTimeout(() => {
+                        loadDirectImageFile(files[1], 'B');
+                    }, 80);
+                    showToast(`🖼️ Załadowano 2 zdjęcia: "${files[0].name}" (A) i "${files[1].name}" (B)`);
+                } else if (files.length === 1) {
+                    const file = files[0];
+                    if (isImg(file)) {
+                        const url = URL.createObjectURL(file);
+                        loadImageSource(url, file.name);
+                        if (!frameA) {
+                            loadDirectImageFile(file, 'A');
+                        } else if (!frameB) {
+                            loadDirectImageFile(file, 'B');
+                        }
+                    } else if (isVid(file)) {
+                        const url = URL.createObjectURL(file);
+                        loadVideoSource(url, file.name);
+                    }
+                } else {
+                    const vid = files.find(isVid);
+                    if (vid) {
+                        loadVideoSource(URL.createObjectURL(vid), vid.name);
+                    }
+                    const imgs = files.filter(isImg);
+                    if (imgs.length >= 2) {
+                        loadDirectImageFile(imgs[0], 'A');
+                        loadDirectImageFile(imgs[1], 'B');
+                    } else if (imgs.length === 1) {
+                        loadDirectImageFile(imgs[0], 'A');
+                    }
+                }
+                mediaFileInput.value = '';
+            });
+        }
+
+        // Bezpośrednie wgrywanie Klatki A i Klatki B
+        if (directImageInputA) {
+            directImageInputA.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) loadDirectImageFile(file, 'A');
+                directImageInputA.value = '';
+            });
+        }
+
+        if (directImageInputB) {
+            directImageInputB.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) loadDirectImageFile(file, 'B');
+                directImageInputB.value = '';
+            });
+        }
+
+        // Zmiana sposobu dopasowania Klatki B (contain vs fill)
+        if (fitModeSelect) {
+            fitModeSelect.addEventListener('change', () => {
+                fitModeB = fitModeSelect.value;
+                renderComparison();
+            });
+        }
 
         // Odtwarzacz - Aktualizacja Czasu
         function formatTime(seconds) {
@@ -1110,11 +1391,13 @@
         });
 
         function updateTimeDisplay() {
+            if (currentSourceType === 'image') return;
             timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
         }
 
         // Kontrolki Odtwarzacza
         btnPlayPause.addEventListener('click', () => {
+            if (currentSourceType === 'image') return;
             if (videoPlayer.paused) {
                 videoPlayer.play();
                 btnPlayPause.textContent = '⏸️ Pauza';
@@ -1125,6 +1408,7 @@
         });
 
         function stepTime(delta) {
+            if (currentSourceType === 'image') return;
             videoPlayer.pause();
             btnPlayPause.textContent = '▶️ Odtwarzaj';
             videoPlayer.currentTime = Math.max(0, Math.min(videoPlayer.duration, videoPlayer.currentTime + delta));
@@ -1137,8 +1421,38 @@
         btnStepForward1s.addEventListener('click', () => stepTime(1));
         btnStepForward5s.addEventListener('click', () => stepTime(5));
 
-        // Przechwytywanie Klatek A i B w pełnej natywnej rozdzielczości źródła (HD / 4K)
+        // Przechwytywanie Klatek A i B w pełnej natywnej rozdzielczości źródła (zarówno z wideo jak i zdjęcia)
         function captureFrame(type) {
+            if (currentSourceType === 'image') {
+                if (!currentImageNaturalWidth || !currentImageNaturalHeight) return;
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = currentImageNaturalWidth;
+                offCanvas.height = currentImageNaturalHeight;
+                const offCtx = offCanvas.getContext('2d');
+                offCtx.imageSmoothingEnabled = true;
+                offCtx.imageSmoothingQuality = 'high';
+                offCtx.drawImage(imageViewer, 0, 0, offCanvas.width, offCanvas.height);
+
+                if (type === 'A') {
+                    frameA = offCanvas;
+                    timeA = null;
+                    frameAName = currentSourceName;
+                    indicatorA.textContent = `Klatka A: ${currentSourceName} (${offCanvas.width}×${offCanvas.height})`;
+                    updateContainerAspectRatio();
+                    showToast(`📌 Zapisano zdjęcie jako Klatkę A (${offCanvas.width}×${offCanvas.height})`);
+                } else {
+                    frameB = offCanvas;
+                    timeB = null;
+                    frameBName = currentSourceName;
+                    indicatorB.textContent = `Klatka B: ${currentSourceName} (${offCanvas.width}×${offCanvas.height})`;
+                    if (!frameA) updateContainerAspectRatio();
+                    showToast(`📌 Zapisano zdjęcie jako Klatkę B (${offCanvas.width}×${offCanvas.height})`);
+                }
+                renderComparison();
+                return;
+            }
+
+            // Przechwytywanie z wideo
             if (!videoPlayer.videoWidth) return;
 
             const offCanvas = document.createElement('canvas');
@@ -1152,11 +1466,17 @@
             if (type === 'A') {
                 frameA = offCanvas;
                 timeA = videoPlayer.currentTime;
-                indicatorA.textContent = `Klatka A: ${formatTime(timeA)}`;
+                frameAName = `${videoNameBadge.textContent} @ ${formatTime(timeA)}`;
+                indicatorA.textContent = `Klatka A: ${formatTime(timeA)} (${offCanvas.width}×${offCanvas.height})`;
+                updateContainerAspectRatio();
+                showToast(`📌 Zapisano klatkę ${formatTime(timeA)} jako Klatkę A`);
             } else {
                 frameB = offCanvas;
                 timeB = videoPlayer.currentTime;
-                indicatorB.textContent = `Klatka B: ${formatTime(timeB)}`;
+                frameBName = `${videoNameBadge.textContent} @ ${formatTime(timeB)}`;
+                indicatorB.textContent = `Klatka B: ${formatTime(timeB)} (${offCanvas.width}×${offCanvas.height})`;
+                if (!frameA) updateContainerAspectRatio();
+                showToast(`📌 Zapisano klatkę ${formatTime(timeB)} jako Klatkę B`);
             }
 
             renderComparison();
@@ -1164,6 +1484,86 @@
 
         btnCaptureA.addEventListener('click', () => captureFrame('A'));
         btnCaptureB.addEventListener('click', () => captureFrame('B'));
+
+        // Obsługa Przeciągnij i Upuść (Drag & Drop) dla filmów i zdjęć
+        function setupDragAndDrop() {
+            const isImg = (f) => f.type.startsWith('image/') || /\.(jpe?g|png|webp|bmp|gif|tiff?)$/i.test(f.name);
+            const isVid = (f) => f.type.startsWith('video/') || /\.(mp4|mkv|webm|mov|avi|ts)$/i.test(f.name);
+
+            window.addEventListener('dragover', (e) => e.preventDefault());
+            window.addEventListener('drop', (e) => e.preventDefault());
+
+            // Upuszczanie na obszar porównywarki
+            if (canvasContainer && canvasDragOverlay) {
+                canvasContainer.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    canvasDragOverlay.classList.add('active');
+                });
+                canvasContainer.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    canvasDragOverlay.classList.add('active');
+                });
+                canvasContainer.addEventListener('dragleave', (e) => {
+                    if (!canvasContainer.contains(e.relatedTarget)) {
+                        canvasDragOverlay.classList.remove('active');
+                    }
+                });
+                canvasContainer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    canvasDragOverlay.classList.remove('active');
+                    const files = Array.from(e.dataTransfer.files || []);
+                    if (files.length === 0) return;
+
+                    const imgs = files.filter(isImg);
+                    if (imgs.length >= 2) {
+                        loadDirectImageFile(imgs[0], 'A');
+                        setTimeout(() => loadDirectImageFile(imgs[1], 'B'), 80);
+                        showToast(`📥 Upuszczono 2 zdjęcia: Klatka A i Klatka B`);
+                    } else if (imgs.length === 1) {
+                        if (!frameA) loadDirectImageFile(imgs[0], 'A');
+                        else loadDirectImageFile(imgs[0], 'B');
+                    } else {
+                        const vid = files.find(isVid);
+                        if (vid) loadVideoSource(URL.createObjectURL(vid), vid.name);
+                    }
+                });
+            }
+
+            // Upuszczanie na obszar źródłowy
+            if (videoContainer && sourceDragOverlay) {
+                videoContainer.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    sourceDragOverlay.classList.add('active');
+                });
+                videoContainer.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    sourceDragOverlay.classList.add('active');
+                });
+                videoContainer.addEventListener('dragleave', (e) => {
+                    if (!videoContainer.contains(e.relatedTarget)) {
+                        sourceDragOverlay.classList.remove('active');
+                    }
+                });
+                videoContainer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    sourceDragOverlay.classList.remove('active');
+                    const files = Array.from(e.dataTransfer.files || []);
+                    if (files.length === 0) return;
+
+                    const vid = files.find(isVid);
+                    if (vid) {
+                        loadVideoSource(URL.createObjectURL(vid), vid.name);
+                    } else {
+                        const img = files.find(isImg);
+                        if (img) {
+                            loadImageSource(URL.createObjectURL(img), img.name);
+                        }
+                    }
+                });
+            }
+        }
+
+        setupDragAndDrop();
 
         // Obsługa Tabów Trybów
         modeTabs.forEach(tab => {
@@ -1547,6 +1947,25 @@
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
 
+        // Rysowanie obrazu wewnątrz prostokąta docelowego z zachowaniem naturalnych proporcji (Letterbox/Contain)
+        function drawContainFrame(context, img, targetW, targetH) {
+            const imgAspect = img.width / img.height;
+            const targetAspect = targetW / targetH;
+            let dw, dh, dx, dy;
+            if (imgAspect > targetAspect) {
+                dw = targetW;
+                dh = targetW / imgAspect;
+                dx = 0;
+                dy = (targetH - dh) / 2;
+            } else {
+                dh = targetH;
+                dw = targetH * imgAspect;
+                dx = (targetW - dw) / 2;
+                dy = 0;
+            }
+            context.drawImage(img, dx, dy, dw, dh);
+        }
+
         // ---------------------------------------------------------------------------------
         // RENDEROWANIE PORÓWNANIA Z ZACHOWANIEM MAKSYMALNEJ OSTROŚCI (HD / 4K / RETINA)
         // ---------------------------------------------------------------------------------
@@ -1573,7 +1992,7 @@
                 ctx.fillStyle = '#9ca3af';
                 ctx.font = '500 16px Outfit, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('Wybierz wideo i zapisz Klatkę A oraz Klatkę B do porównania', w / 2, h / 2);
+                ctx.fillText('Wybierz wideo lub zdjęcia z dysku i zapisz Klatkę A oraz Klatkę B do porównania', w / 2, h / 2);
                 return;
             }
 
@@ -1589,6 +2008,21 @@
 
             function applyFrameBAlignment(context) {
                 context.transform(alignM.a, alignM.b, alignM.c, alignM.d, alignM.e, alignM.f);
+            }
+
+            // Rysowanie Klatki B z uwzględnieniem kalibracji lub wybranego trybu dopasowania proporcji
+            function drawFrameBOnContext(context, targetW, targetH) {
+                if (!frameB) return;
+                context.save();
+                if (calibrationPairs.length > 0 && chkEnableAlignment.checked) {
+                    applyFrameBAlignment(context);
+                    context.drawImage(frameB, 0, 0, targetW, targetH);
+                } else if (fitModeB === 'contain' && frameA && Math.abs((frameA.width / frameA.height) - (frameB.width / frameB.height)) > 0.01) {
+                    drawContainFrame(context, frameB, targetW, targetH);
+                } else {
+                    context.drawImage(frameB, 0, 0, targetW, targetH);
+                }
+                context.restore();
             }
 
             // Ustalenie wyświetlanej klatki (uwzględnia tryb Hold to Peek)
@@ -1607,12 +2041,7 @@
                 if (currentFrame === 'A') {
                     if (frameA) ctx.drawImage(frameA, 0, 0, w, h);
                 } else {
-                    if (frameB) {
-                        ctx.save();
-                        applyFrameBAlignment(ctx);
-                        ctx.drawImage(frameB, 0, 0, w, h);
-                        ctx.restore();
-                    }
+                    drawFrameBOnContext(ctx, w, h);
                 }
                 ctx.restore();
             } else if (activeMode === 'split') {
@@ -1631,7 +2060,7 @@
                     ctx.restore();
                 }
 
-                // Klatka B po prawej z wyrównaniem
+                // Klatka B po prawej z wyrównaniem lub zachowaniem proporcji
                 if (frameB) {
                     ctx.save();
                     ctx.beginPath();
@@ -1639,8 +2068,7 @@
                     ctx.clip();
 
                     applyZoomTransform(ctx);
-                    applyFrameBAlignment(ctx);
-                    ctx.drawImage(frameB, 0, 0, w, h);
+                    drawFrameBOnContext(ctx, w, h);
                     ctx.restore();
                 }
             } else if (activeMode === 'blend') {
@@ -1652,8 +2080,7 @@
                 if (frameB) {
                     ctx.save();
                     ctx.globalAlpha = parseFloat(opacitySlider.value);
-                    applyFrameBAlignment(ctx);
-                    ctx.drawImage(frameB, 0, 0, w, h);
+                    drawFrameBOnContext(ctx, w, h);
                     ctx.restore();
                 }
                 ctx.restore();
@@ -1667,8 +2094,7 @@
                 if (frameB) {
                     ctx.save();
                     ctx.translate(halfW, 0);
-                    applyFrameBAlignment(ctx);
-                    ctx.drawImage(frameB, 0, 0, halfW, h);
+                    drawFrameBOnContext(ctx, halfW, h);
                     ctx.restore();
                 }
                 ctx.restore();
@@ -2033,33 +2459,84 @@
             zoomInfo.textContent = `Powiększenie: ${Math.round(zoomScale * 100)}% | Pozycja: (${Math.round(panX)}, ${Math.round(panY)})`;
         }
 
-        // Pobieranie Zrzutu Ekranu w pełnej jakości HD
+        // Pobieranie Zrzutu Ekranu w pełnej natywnej jakości HD / 4K
         btnExportImage.addEventListener('click', () => {
-            // Jeśli mamy klatki, renderujemy canvas w maksymalnej natywnej rozdzielczości klatki
-            const exportCanvas = document.createElement('canvas');
             const targetW = (frameA ? frameA.width : (frameB ? frameB.width : compCanvas.width)) || 1920;
             const targetH = (frameA ? frameA.height : (frameB ? frameB.height : compCanvas.height)) || 1080;
 
+            const exportCanvas = document.createElement('canvas');
             exportCanvas.width = targetW;
             exportCanvas.height = targetH;
             const expCtx = exportCanvas.getContext('2d');
             expCtx.imageSmoothingEnabled = true;
             expCtx.imageSmoothingQuality = 'high';
 
-            // Klatka A lub B w zależności od trybu
+            const alignM = computeAlignmentMatrix(calibrationPairs, targetW, targetH);
+
+            function applyExportAlign(c) {
+                c.transform(alignM.a, alignM.b, alignM.c, alignM.d, alignM.e, alignM.f);
+            }
+
+            function drawExportFrameB(c, w, h) {
+                if (!frameB) return;
+                c.save();
+                if (calibrationPairs.length > 0 && chkEnableAlignment.checked) {
+                    applyExportAlign(c);
+                    c.drawImage(frameB, 0, 0, w, h);
+                } else if (fitModeB === 'contain' && frameA && Math.abs((frameA.width / frameA.height) - (frameB.width / frameB.height)) > 0.01) {
+                    drawContainFrame(c, frameB, w, h);
+                } else {
+                    c.drawImage(frameB, 0, 0, w, h);
+                }
+                c.restore();
+            }
+
             if (activeMode === 'toggle') {
                 const cur = isPeeking ? (activeToggleFrame === 'A' ? 'B' : 'A') : activeToggleFrame;
                 if (cur === 'A' && frameA) expCtx.drawImage(frameA, 0, 0, targetW, targetH);
-                else if (frameB) expCtx.drawImage(frameB, 0, 0, targetW, targetH);
-            } else {
-                // Rysujemy zawartość compCanvas
-                expCtx.drawImage(compCanvas, 0, 0, targetW, targetH);
+                else drawExportFrameB(expCtx, targetW, targetH);
+            } else if (activeMode === 'split') {
+                const splitX = targetW * splitRatio;
+                if (frameA) {
+                    expCtx.save();
+                    expCtx.beginPath();
+                    expCtx.rect(0, 0, splitX, targetH);
+                    expCtx.clip();
+                    expCtx.drawImage(frameA, 0, 0, targetW, targetH);
+                    expCtx.restore();
+                }
+                if (frameB) {
+                    expCtx.save();
+                    expCtx.beginPath();
+                    expCtx.rect(splitX, 0, targetW - splitX, targetH);
+                    expCtx.clip();
+                    drawExportFrameB(expCtx, targetW, targetH);
+                    expCtx.restore();
+                }
+            } else if (activeMode === 'blend') {
+                if (frameA) expCtx.drawImage(frameA, 0, 0, targetW, targetH);
+                if (frameB) {
+                    expCtx.save();
+                    expCtx.globalAlpha = parseFloat(opacitySlider.value);
+                    drawExportFrameB(expCtx, targetW, targetH);
+                    expCtx.restore();
+                }
+            } else if (activeMode === 'side') {
+                const halfW = targetW / 2;
+                if (frameA) expCtx.drawImage(frameA, 0, 0, halfW, targetH);
+                if (frameB) {
+                    expCtx.save();
+                    expCtx.translate(halfW, 0);
+                    drawExportFrameB(expCtx, halfW, targetH);
+                    expCtx.restore();
+                }
             }
 
             const link = document.createElement('a');
-            link.download = `porownanie_hd_${Date.now()}.png`;
+            link.download = `porownanie_${targetW}x${targetH}_${Date.now()}.png`;
             link.href = exportCanvas.toDataURL('image/png');
             link.click();
+            showToast(`💾 Wyeksportowano obraz HD (${targetW}×${targetH} px)`);
         });
 
         // Inicjalizacja widoku
